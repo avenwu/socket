@@ -1,5 +1,7 @@
 package com.badlogic.socket;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
@@ -17,15 +19,17 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.badlogic.R;
+import com.badlogic.adapter.EmotionStaticAdapter;
+import com.badlogic.adapter.MessageHistoryAdapter;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -36,9 +40,9 @@ public class SendFeed extends Activity {
     private ImageView mBack;
     private ImageView mPublish;
     private EditText mContent;
-    private Button mPlace;
-    private ImageView mSperator;
-    private ImageView mList;
+    // private Button mPlace;
+    // private ImageView mSperator;
+    // private ImageView mList;
     private TextView mCount;
     private ImageButton mVoice;
     private ImageButton mPoi;
@@ -46,7 +50,7 @@ public class SendFeed extends Activity {
     private ImageButton mAt;
     private ImageButton mEmoticon;
     private GridView mEmoticons;
-    // private EmoticonsAdapter mAdapter;
+    private EmotionStaticAdapter emotionStaticAdapter;
 
     private LocationClient mClient;
     private LocationClientOption mOption;
@@ -57,6 +61,8 @@ public class SendFeed extends Activity {
     private Drawable mPoi_on_icon;
 
     private ProgressDialog mPublishDialog;
+    private ListView historyMessageListView;
+    private MessageHistoryAdapter messageHistoryAdapter;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,11 +75,15 @@ public class SendFeed extends Activity {
         mPoi_off_icon.setBounds(0, 0, mPoi_off_icon.getMinimumWidth(), mPoi_off_icon.getMinimumHeight());
         mPoi_on_icon = getResources().getDrawable(R.drawable.v5_0_1_publisher_poi_active_icon);
         mPoi_on_icon.setBounds(0, 0, mPoi_on_icon.getMinimumWidth(), mPoi_on_icon.getMinimumHeight());
+        int[] res = new int[] { R.drawable.smiley_0, R.drawable.smiley_1, R.drawable.smiley_2, R.drawable.smiley_3, R.drawable.smiley_4,
+                R.drawable.smiley_5, R.drawable.smiley_6, R.drawable.smiley_7, R.drawable.smiley_8, R.drawable.smiley_9, R.drawable.smiley_10,
+                R.drawable.smiley_11, R.drawable.smiley_12, R.drawable.smiley_13, R.drawable.smiley_14, R.drawable.smiley_15, R.drawable.smiley_16,
+                R.drawable.smiley_17, R.drawable.smiley_18, };
 
-        // mAdapter = new EmoticonsAdapter(this);
-
-        // mEmoticons.setAdapter(mAdapter);
-
+        emotionStaticAdapter = new EmotionStaticAdapter(this.getApplicationContext(), res);
+        mEmoticons.setAdapter(emotionStaticAdapter);
+        messageHistoryAdapter = new MessageHistoryAdapter(this.getApplicationContext(), getData());
+        historyMessageListView.setAdapter(messageHistoryAdapter);
         mClient.start();
         mLBSIsReceiver = true;
         mClient.requestLocation();
@@ -83,9 +93,10 @@ public class SendFeed extends Activity {
         mBack = (ImageView) findViewById(R.id.newsfeedpublish_back);
         mPublish = (ImageView) findViewById(R.id.newsfeedpublish_publish);
         mContent = (EditText) findViewById(R.id.newsfeedpublish_content);
-        mPlace = (Button) findViewById(R.id.newsfeedpublish_poi_place);
-        mSperator = (ImageView) findViewById(R.id.newsfeedpublish_poi_sperator);
-        mList = (ImageView) findViewById(R.id.newsfeedpublish_poi_list);
+        // mPlace = (Button) findViewById(R.id.newsfeedpublish_poi_place);
+        // mSperator = (ImageView)
+        // findViewById(R.id.newsfeedpublish_poi_sperator);
+        // mList = (ImageView) findViewById(R.id.newsfeedpublish_poi_list);
         mCount = (TextView) findViewById(R.id.newsfeedpublish_count);
         mVoice = (ImageButton) findViewById(R.id.newsfeedpublish_voice);
         mPoi = (ImageButton) findViewById(R.id.newsfeedpublish_poi);
@@ -93,6 +104,20 @@ public class SendFeed extends Activity {
         mAt = (ImageButton) findViewById(R.id.newsfeedpublish_at);
         mEmoticon = (ImageButton) findViewById(R.id.newsfeedpublish_emoticon);
         mEmoticons = (GridView) findViewById(R.id.newsfeedpublish_emoticons);
+        historyMessageListView = (ListView) findViewById(R.id.listview_message);
+
+    }
+
+    /*
+     * TODO
+     */
+    private ArrayList<String> getData() {
+        ArrayList<String> data = new ArrayList<String>();
+        for (int i = 0; i < 20; i++) {
+            data.add("How are you? " +i);
+        }
+
+        return data;
     }
 
     private void setListener() {
@@ -141,7 +166,7 @@ public class SendFeed extends Activity {
 
             public void afterTextChanged(Editable s) {
                 int number = s.length();
-                mCount.setText(String.valueOf(number));
+                mCount.setText(String.valueOf(number) + "/140");
                 selectionStart = mContent.getSelectionStart();
                 selectionEnd = mCount.getSelectionEnd();
                 if (temp.length() > 140) {
@@ -152,65 +177,48 @@ public class SendFeed extends Activity {
                 }
             }
         });
-        mPlace.setOnClickListener(new OnClickListener() {
-
-            public void onClick(View v) {
-                if (mPlace.getText().toString().equals("��ӵص�")) {
-                    mLBSIsReceiver = true;
-                    mPlace.setText("���ڶ�λ...");
-                    mSperator.setVisibility(View.VISIBLE);
-                    mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button_on);
-                    if (!mClient.isStarted()) {
-                        mClient.start();
-                    }
-                    mClient.requestLocation();
-                } else if (mPlace.getText().toString().equals("���ڶ�λ...")) {
-                    if (mClient.isStarted()) {
-                        mClient.stop();
-                        mLBSIsReceiver = false;
-                        mLBSAddress = null;
-                        mPlace.setCompoundDrawables(mPoi_off_icon, null, null, null);
-                        mPlace.setText("��ӵص�");
-                        mSperator.setVisibility(View.INVISIBLE);
-                        mList.setVisibility(View.INVISIBLE);
-                        mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button);
-                    }
-                } else {
-                    // startActivity(new Intent(NewsFeedPublish.this,
-                    // CurrentLocation.class));
-                    // overridePendingTransition(R.anim.roll_up, R.anim.roll);
-                }
-            }
-        });
+        /*
+         * mPlace.setOnClickListener(new OnClickListener() {
+         * 
+         * public void onClick(View v) { if
+         * (mPlace.getText().toString().equals("��ӵص�")) { mLBSIsReceiver =
+         * true; mPlace.setText("���ڶ�λ...");
+         * mSperator.setVisibility(View.VISIBLE);
+         * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button_on); if
+         * (!mClient.isStarted()) { mClient.start(); }
+         * mClient.requestLocation(); } else if
+         * (mPlace.getText().toString().equals("���ڶ�λ...")) { if
+         * (mClient.isStarted()) { mClient.stop(); mLBSIsReceiver = false;
+         * mLBSAddress = null; mPlace.setCompoundDrawables(mPoi_off_icon, null,
+         * null, null); mPlace.setText("��ӵص�");
+         * mSperator.setVisibility(View.INVISIBLE);
+         * mList.setVisibility(View.INVISIBLE);
+         * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button); } }
+         * else { // startActivity(new Intent(NewsFeedPublish.this, //
+         * CurrentLocation.class)); // overridePendingTransition(R.anim.roll_up,
+         * R.anim.roll); } } });
+         */
         mVoice.setOnClickListener(new OnClickListener() {
 
             public void onClick(View v) {
                 Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���", Toast.LENGTH_SHORT).show();
             }
         });
-        mPoi.setOnClickListener(new OnClickListener() {
-
-            public void onClick(View v) {
-                if (mLBSIsReceiver) {
-                    mLBSIsReceiver = false;
-                    mLBSAddress = null;
-                    mPlace.setCompoundDrawables(mPoi_off_icon, null, null, null);
-                    mPlace.setText("��ӵص�");
-                    mSperator.setVisibility(View.INVISIBLE);
-                    mList.setVisibility(View.INVISIBLE);
-                    mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button);
-                } else {
-                    mLBSIsReceiver = true;
-                    mPlace.setText("���ڶ�λ...");
-                    mSperator.setVisibility(View.VISIBLE);
-                    mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button_on);
-                    if (!mClient.isStarted()) {
-                        mClient.start();
-                    }
-                    mClient.requestLocation();
-                }
-            }
-        });
+        /*
+         * mPoi.setOnClickListener(new OnClickListener() {
+         * 
+         * public void onClick(View v) { if (mLBSIsReceiver) { mLBSIsReceiver =
+         * false; mLBSAddress = null; mPlace.setCompoundDrawables(mPoi_off_icon,
+         * null, null, null); mPlace.setText("��ӵص�");
+         * mSperator.setVisibility(View.INVISIBLE);
+         * mList.setVisibility(View.INVISIBLE);
+         * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button); } else
+         * { mLBSIsReceiver = true; mPlace.setText("���ڶ�λ...");
+         * mSperator.setVisibility(View.VISIBLE);
+         * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button_on); if
+         * (!mClient.isStarted()) { mClient.start(); }
+         * mClient.requestLocation(); } } });
+         */
         mImage.setOnClickListener(new OnClickListener() {
 
             public void onClick(View v) {
@@ -332,12 +340,12 @@ public class SendFeed extends Activity {
                 // if (mClient.isStarted()) {
                 // mClient.stop();
                 // }
-                if (mLBSAddress != null) {
-                    mPlace.setText(mLBSAddress);
-                    mPlace.setCompoundDrawables(mPoi_on_icon, null, null, null);
-                    mList.setVisibility(View.VISIBLE);
-                    mSperator.setVisibility(View.VISIBLE);
-                }
+                // if (mLBSAddress != null) {
+                // mPlace.setText(mLBSAddress);
+                // mPlace.setCompoundDrawables(mPoi_on_icon, null, null, null);
+                // mList.setVisibility(View.VISIBLE);
+                // mSperator.setVisibility(View.VISIBLE);
+                // }
                 break;
 
             default:
