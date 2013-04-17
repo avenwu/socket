@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="badlogic.socket"
+    package="com.badlogic"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -10,15 +10,19 @@
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <activity
-            android:name=".ControlPCActivity"
-            android:label="@string/app_name" >
+            android:name="com.badlogic.socket.SendFeed"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustUnspecified|adjustResize" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".mouseActivity" />
+        <activity android:name="com.badlogic.socket.mouseActivity" />
+        <activity android:name="com.badlogic.socket.ControlPCActivity" >
+        </activity>
     </application>
 
     <uses-permission android:name="android.permission.WRITE_SETTINGS" />

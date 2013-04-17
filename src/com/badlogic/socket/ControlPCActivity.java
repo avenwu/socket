@@ -1,4 +1,4 @@
-package badlogic.socket;
+package com.badlogic.socket;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,7 +12,6 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.Enumeration;
 
-import android.R;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,7 +27,7 @@ import com.WazaBe.HoloEverywhere.widget.Button;
 import com.WazaBe.HoloEverywhere.widget.EditText;
 import com.WazaBe.HoloEverywhere.widget.TextView;
 import com.WazaBe.HoloEverywhere.widget.Toast;
-import com.WazaBe.HoloEverywhere.widget.View;
+import com.badlogic.R;
 
 public class ControlPCActivity extends Activity {
 
@@ -93,7 +92,7 @@ public class ControlPCActivity extends Activity {
 
     private OnClickListener StartClickListener = new OnClickListener() {
         @Override
-        public void onClick(View arg0) {
+        public void onClick(android.view.View arg0) {
             // TODO Auto-generated method stub
             if (isConnecting) {
                 isConnecting = false;
@@ -127,7 +126,7 @@ public class ControlPCActivity extends Activity {
 
     private OnClickListener SendClickListenerClient = new OnClickListener() {
         @Override
-        public void onClick(View arg0) {
+        public void onClick(android.view.View arg0) {
             // TODO Auto-generated method stub
             if (isConnecting && mSocketClient != null) {
                 String msgText = editMsgTextCilent.getText().toString();// ȡ�ñ༭�����������������
@@ -149,7 +148,7 @@ public class ControlPCActivity extends Activity {
     };
     private OnClickListener SendClickListenerServer = new OnClickListener() {
         @Override
-        public void onClick(View arg0) {
+        public void onClick(android.view.View arg0) {
             // TODO Auto-generated method stub
             if (serverRuning && mSocketServer != null) {
                 String msgText = editMsgText.getText().toString();// ȡ�ñ༭�����������������
@@ -255,7 +254,7 @@ public class ControlPCActivity extends Activity {
     private boolean serverRuning = false;
     private OnClickListener CreateClickListener = new OnClickListener() {
         @Override
-        public void onClick(View arg0) {
+        public void onClick(android.view.View arg0) {
             // TODO Auto-generated method stub
             if (serverRuning) {
                 serverRuning = false;
@@ -393,7 +392,7 @@ public class ControlPCActivity extends Activity {
 
     private OnClickListener StartMouseClickListenerServer = new OnClickListener() {
         @Override
-        public void onClick(View arg0) {
+        public void onClick(android.view.View arg0) {
             // TODO Auto-generated method stub
             if ((serverRuning && mSocketServer != null) || (isConnecting && mSocketClient != null)) {
                 Intent intent = new Intent();
