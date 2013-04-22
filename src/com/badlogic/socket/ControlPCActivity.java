@@ -12,6 +12,9 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.util.Enumeration;
 
+import com.badlogic.R;
+
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -21,423 +24,445 @@ import android.os.StrictMode;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View.OnClickListener;
-
-import com.WazaBe.HoloEverywhere.app.Activity;
-import com.WazaBe.HoloEverywhere.widget.Button;
-import com.WazaBe.HoloEverywhere.widget.EditText;
-import com.WazaBe.HoloEverywhere.widget.TextView;
-import com.WazaBe.HoloEverywhere.widget.Toast;
-import com.badlogic.R;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class ControlPCActivity extends Activity {
 
-    private Button startButton;
-    private EditText IPText;
-    private Button sendButtonClient;
-    private Button sendButtonServer;
-    private Button CreateButton;
-    private EditText editMsgText, editMsgTextCilent;
-    private TextView recvText;
-    private Button StartMouseButton;
+	private Button startButton;
+	private EditText IPText;
+	private Button sendButtonClient;
+	private Button sendButtonServer;
+	private Button CreateButton;
+	private EditText editMsgText, editMsgTextCilent;
+	private TextView recvText;
+	private Button StartMouseButton;
 
-    private Context mContext;
-    private boolean isConnecting = false;
+	private Context mContext;
+	private boolean isConnecting = false;
 
-    private Thread mThreadClient = null;
-    private Thread mThreadServer = null;
-    private Socket mSocketServer = null;
-    private Socket mSocketClient = null;
-    static BufferedReader mBufferedReaderServer = null;
-    static PrintWriter mPrintWriterServer = null;
-    static BufferedReader mBufferedReaderClient = null;
-    static PrintWriter mPrintWriterClient = null;
-    private String recvMessageClient = "";
-    private String recvMessageServer = "";
+	private Thread mThreadClient = null;
+	private Thread mThreadServer = null;
+	private Socket mSocketServer = null;
+	private Socket mSocketClient = null;
+	static BufferedReader mBufferedReaderServer = null;
+	static PrintWriter mPrintWriterServer = null;
+	static BufferedReader mBufferedReaderClient = null;
+	static PrintWriter mPrintWriterClient = null;
+	private String recvMessageClient = "";
+	private String recvMessageServer = "";
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-        mContext = this;
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
+		mContext = this;
 
-        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectDiskReads().detectDiskWrites().detectNetwork().penaltyLog().build());
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedSqlLiteObjects().penaltyLog().penaltyDeath().build());
+		StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+				.detectDiskReads().detectDiskWrites().detectNetwork()
+				.penaltyLog().build());
+		StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+				.detectLeakedSqlLiteObjects().penaltyLog().penaltyDeath()
+				.build());
 
-        IPText = (EditText) findViewById(R.id.IPText);
-        // IPText.setText("10.0.2.15:");
-        IPText.setText("192.168.12.131:59671");
-        startButton = (Button) findViewById(R.id.StartConnect);
-        startButton.setOnClickListener(StartClickListener);
+		IPText = (EditText) findViewById(R.id.IPText);
+		// IPText.setText("10.0.2.15:");
+		IPText.setText("192.168.12.131:59671");
+		startButton = (Button) findViewById(R.id.StartConnect);
+		startButton.setOnClickListener(StartClickListener);
 
-        editMsgTextCilent = (EditText) findViewById(R.id.clientMessageText);
-        editMsgTextCilent.setText("up");
+		editMsgTextCilent = (EditText) findViewById(R.id.clientMessageText);
+		editMsgTextCilent.setText("up");
 
-        editMsgText = (EditText) findViewById(R.id.MessageText);
-        editMsgText.setText("up");
+		editMsgText = (EditText) findViewById(R.id.MessageText);
+		editMsgText.setText("up");
 
-        sendButtonClient = (Button) findViewById(R.id.SendButtonClient);
-        sendButtonClient.setOnClickListener(SendClickListenerClient);
-        sendButtonServer = (Button) findViewById(R.id.SendButtonServer);
-        sendButtonServer.setOnClickListener(SendClickListenerServer);
+		sendButtonClient = (Button) findViewById(R.id.SendButtonClient);
+		sendButtonClient.setOnClickListener(SendClickListenerClient);
+		sendButtonServer = (Button) findViewById(R.id.SendButtonServer);
+		sendButtonServer.setOnClickListener(SendClickListenerServer);
 
-        CreateButton = (Button) findViewById(R.id.CreateConnect);
-        CreateButton.setOnClickListener(CreateClickListener);
+		CreateButton = (Button) findViewById(R.id.CreateConnect);
+		CreateButton.setOnClickListener(CreateClickListener);
 
-        recvText = (TextView) findViewById(R.id.RecvText);
-        recvText.setMovementMethod(ScrollingMovementMethod.getInstance());
+		recvText = (TextView) findViewById(R.id.RecvText);
+		recvText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
-        StartMouseButton = (Button) findViewById(R.id.StartMouse);
-        StartMouseButton.setOnClickListener(StartMouseClickListenerServer);
-    }
+		StartMouseButton = (Button) findViewById(R.id.StartMouse);
+		StartMouseButton.setOnClickListener(StartMouseClickListenerServer);
+	}
 
-    private OnClickListener StartClickListener = new OnClickListener() {
-        @Override
-        public void onClick(android.view.View arg0) {
-            // TODO Auto-generated method stub
-            if (isConnecting) {
-                isConnecting = false;
-                try {
-                    if (mSocketClient != null) {
-                        mSocketClient.close();
-                        mSocketClient = null;
+	private OnClickListener StartClickListener = new OnClickListener() {
+		@Override
+		public void onClick(android.view.View arg0) {
+			// TODO Auto-generated method stub
+			if (isConnecting) {
+				isConnecting = false;
+				try {
+					if (mSocketClient != null) {
+						mSocketClient.close();
+						mSocketClient = null;
 
-                        mPrintWriterClient.close();
-                        mPrintWriterClient = null;
-                    }
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                mThreadClient.interrupt();
+						mPrintWriterClient.close();
+						mPrintWriterClient = null;
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				mThreadClient.interrupt();
 
-                startButton.setText("��ʼ����");
-                IPText.setEnabled(true);
-                recvText.setText("��Ϣ:\n");
-            } else {
-                isConnecting = true;
-                startButton.setText("ֹͣ����");
-                IPText.setEnabled(false);
+				startButton.setText("锟斤拷始锟斤拷锟斤拷");
+				IPText.setEnabled(true);
+				recvText.setText("锟斤拷息:\n");
+			} else {
+				isConnecting = true;
+				startButton.setText("停止锟斤拷锟斤拷");
+				IPText.setEnabled(false);
 
-                mThreadClient = new Thread(mRunnable);
-                mThreadClient.start();
-            }
-        }
-    };
+				mThreadClient = new Thread(mRunnable);
+				mThreadClient.start();
+			}
+		}
+	};
 
-    private OnClickListener SendClickListenerClient = new OnClickListener() {
-        @Override
-        public void onClick(android.view.View arg0) {
-            // TODO Auto-generated method stub
-            if (isConnecting && mSocketClient != null) {
-                String msgText = editMsgTextCilent.getText().toString();// ȡ�ñ༭�����������������
-                if (msgText.length() <= 0) {
-                    Toast.makeText(mContext, "�������ݲ���Ϊ�գ�", Toast.LENGTH_SHORT).show();
-                } else {
-                    try {
-                        mPrintWriterClient.print(msgText);// ���͸������
-                        mPrintWriterClient.flush();
-                    } catch (Exception e) {
-                        // TODO: handle exception
-                        Toast.makeText(mContext, "�����쳣��" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-            } else {
-                Toast.makeText(mContext, "û������", Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
-    private OnClickListener SendClickListenerServer = new OnClickListener() {
-        @Override
-        public void onClick(android.view.View arg0) {
-            // TODO Auto-generated method stub
-            if (serverRuning && mSocketServer != null) {
-                String msgText = editMsgText.getText().toString();// ȡ�ñ༭�����������������
-                if (msgText.length() <= 0) {
-                    Toast.makeText(mContext, "�������ݲ���Ϊ�գ�", Toast.LENGTH_SHORT).show();
-                } else {
-                    try {
-                        mPrintWriterServer.print(msgText);// ���͸������
-                        mPrintWriterServer.flush();
-                    } catch (Exception e) {
-                        // TODO: handle exception
-                        Toast.makeText(mContext, "�����쳣��" + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    }
-                }
-            } else {
-                Toast.makeText(mContext, "û������", Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
-    // �߳�:�����������������Ϣ
-    private Runnable mRunnable = new Runnable() {
-        public void run() {
-            String msgText = IPText.getText().toString();
-            if (msgText.length() <= 0) {
-                // Toast.makeText(mContext, "IP����Ϊ�գ�",
-                // Toast.LENGTH_SHORT).show();
-                recvMessageClient = "IP����Ϊ�գ�\n";// ��Ϣ����
-                Message msg = new Message();
-                msg.what = 1;
-                mHandler.sendMessage(msg);
-                return;
-            }
-            int start = msgText.indexOf(":");
-            if ((start == -1) || (start + 1 >= msgText.length())) {
-                recvMessageClient = "IP��ַ���Ϸ�\n";// ��Ϣ����
-                Message msg = new Message();
-                msg.what = 1;
-                mHandler.sendMessage(msg);
-                return;
-            }
-            String sIP = msgText.substring(0, start);
-            String sPort = msgText.substring(start + 1);
-            int port = Integer.parseInt(sPort);
+	private OnClickListener SendClickListenerClient = new OnClickListener() {
+		@Override
+		public void onClick(android.view.View arg0) {
+			// TODO Auto-generated method stub
+			if (isConnecting && mSocketClient != null) {
+				String msgText = editMsgTextCilent.getText().toString();// 取锟矫编辑锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟�
+				if (msgText.length() <= 0) {
+					Toast.makeText(mContext, "锟斤拷锟斤拷锟斤拷锟捷诧拷锟斤拷为锟秸ｏ拷",
+							Toast.LENGTH_SHORT).show();
+				} else {
+					try {
+						mPrintWriterClient.print(msgText);// 锟斤拷锟酵革拷锟斤拷锟斤拷锟�
+						mPrintWriterClient.flush();
+					} catch (Exception e) {
+						// TODO: handle exception
+						Toast.makeText(mContext,
+								"锟斤拷锟斤拷锟届常锟斤拷" + e.getMessage(),
+								Toast.LENGTH_SHORT).show();
+					}
+				}
+			} else {
+				Toast.makeText(mContext, "没锟斤拷锟斤拷锟斤拷", Toast.LENGTH_SHORT)
+						.show();
+			}
+		}
+	};
+	private OnClickListener SendClickListenerServer = new OnClickListener() {
+		@Override
+		public void onClick(android.view.View arg0) {
+			// TODO Auto-generated method stub
+			if (serverRuning && mSocketServer != null) {
+				String msgText = editMsgText.getText().toString();// 取锟矫编辑锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟�
+				if (msgText.length() <= 0) {
+					Toast.makeText(mContext, "锟斤拷锟斤拷锟斤拷锟捷诧拷锟斤拷为锟秸ｏ拷",
+							Toast.LENGTH_SHORT).show();
+				} else {
+					try {
+						mPrintWriterServer.print(msgText);// 锟斤拷锟酵革拷锟斤拷锟斤拷锟�
+						mPrintWriterServer.flush();
+					} catch (Exception e) {
+						// TODO: handle exception
+						Toast.makeText(mContext,
+								"锟斤拷锟斤拷锟届常锟斤拷" + e.getMessage(),
+								Toast.LENGTH_SHORT).show();
+					}
+				}
+			} else {
+				Toast.makeText(mContext, "没锟斤拷锟斤拷锟斤拷", Toast.LENGTH_SHORT)
+						.show();
+			}
+		}
+	};
+	// 锟竭筹拷:锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟较�
+	private Runnable mRunnable = new Runnable() {
+		public void run() {
+			String msgText = IPText.getText().toString();
+			if (msgText.length() <= 0) {
+				// Toast.makeText(mContext, "IP锟斤拷锟斤拷为锟秸ｏ拷",
+				// Toast.LENGTH_SHORT).show();
+				recvMessageClient = "IP锟斤拷锟斤拷为锟秸ｏ拷\n";// 锟斤拷息锟斤拷锟斤拷
+				Message msg = new Message();
+				msg.what = 1;
+				mHandler.sendMessage(msg);
+				return;
+			}
+			int start = msgText.indexOf(":");
+			if ((start == -1) || (start + 1 >= msgText.length())) {
+				recvMessageClient = "IP锟斤拷址锟斤拷锟较凤拷\n";// 锟斤拷息锟斤拷锟斤拷
+				Message msg = new Message();
+				msg.what = 1;
+				mHandler.sendMessage(msg);
+				return;
+			}
+			String sIP = msgText.substring(0, start);
+			String sPort = msgText.substring(start + 1);
+			int port = Integer.parseInt(sPort);
 
-            Log.d("gjz", "IP:" + sIP + ":" + port);
+			Log.d("gjz", "IP:" + sIP + ":" + port);
 
-            try {
-                // ���ӷ�����
-                mSocketClient = new Socket(sIP, port); // portnum
-                // ȡ�����롢�����
-                mBufferedReaderClient = new BufferedReader(new InputStreamReader(mSocketClient.getInputStream()));
+			try {
+				// 锟斤拷锟接凤拷锟斤拷锟斤拷
+				mSocketClient = new Socket(sIP, port); // portnum
+				// 取锟斤拷锟斤拷锟诫、锟斤拷锟斤拷锟�
+				mBufferedReaderClient = new BufferedReader(
+						new InputStreamReader(mSocketClient.getInputStream()));
 
-                mPrintWriterClient = new PrintWriter(mSocketClient.getOutputStream(), true);
+				mPrintWriterClient = new PrintWriter(
+						mSocketClient.getOutputStream(), true);
 
-                recvMessageClient = "�Ѿ�����server!\n";// ��Ϣ����
-                Message msg = new Message();
-                msg.what = 1;
-                mHandler.sendMessage(msg);
-                // break;
-            } catch (Exception e) {
-                recvMessageClient = "����IP�쳣:" + e.toString() + e.getMessage() + "\n";// ��Ϣ����
-                Message msg = new Message();
-                msg.what = 1;
-                mHandler.sendMessage(msg);
-                return;
-            }
+				recvMessageClient = "锟窖撅拷锟斤拷锟斤拷server!\n";// 锟斤拷息锟斤拷锟斤拷
+				Message msg = new Message();
+				msg.what = 1;
+				mHandler.sendMessage(msg);
+				// break;
+			} catch (Exception e) {
+				recvMessageClient = "锟斤拷锟斤拷IP锟届常:" + e.toString()
+						+ e.getMessage() + "\n";// 锟斤拷息锟斤拷锟斤拷
+				Message msg = new Message();
+				msg.what = 1;
+				mHandler.sendMessage(msg);
+				return;
+			}
 
-            char[] buffer = new char[256];
-            int count = 0;
-            while (isConnecting) {
-                try {
-                    // if ( (recvMessageClient =
-                    // mBufferedReaderClient.readLine()) != null )
-                    if ((count = mBufferedReaderClient.read(buffer)) > 0) {
-                        recvMessageClient = getInfoBuff(buffer, count) + "\n";// ��Ϣ����
-                        Message msg = new Message();
-                        msg.what = 1;
-                        mHandler.sendMessage(msg);
-                    }
-                } catch (Exception e) {
-                    recvMessageClient = "�����쳣:" + e.getMessage() + "\n";// ��Ϣ����
-                    Message msg = new Message();
-                    msg.what = 1;
-                    mHandler.sendMessage(msg);
-                }
-            }
-        }
-    };
+			char[] buffer = new char[256];
+			int count = 0;
+			while (isConnecting) {
+				try {
+					// if ( (recvMessageClient =
+					// mBufferedReaderClient.readLine()) != null )
+					if ((count = mBufferedReaderClient.read(buffer)) > 0) {
+						recvMessageClient = getInfoBuff(buffer, count) + "\n";// 锟斤拷息锟斤拷锟斤拷
+						Message msg = new Message();
+						msg.what = 1;
+						mHandler.sendMessage(msg);
+					}
+				} catch (Exception e) {
+					recvMessageClient = "锟斤拷锟斤拷锟届常:" + e.getMessage() + "\n";// 锟斤拷息锟斤拷锟斤拷
+					Message msg = new Message();
+					msg.what = 1;
+					mHandler.sendMessage(msg);
+				}
+			}
+		}
+	};
 
-    Handler mHandler = new Handler() {
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if (msg.what == 0) {
-                recvText.append("Server: " + recvMessageServer); // ˢ��
-            } else if (msg.what == 1) {
-                recvText.append("Client: " + recvMessageClient); // ˢ��
+	Handler mHandler = new Handler() {
+		public void handleMessage(Message msg) {
+			super.handleMessage(msg);
+			if (msg.what == 0) {
+				recvText.append("Server: " + recvMessageServer); // 刷锟斤拷
+			} else if (msg.what == 1) {
+				recvText.append("Client: " + recvMessageClient); // 刷锟斤拷
 
-            }
-        }
-    };
-    // ���������ServerSocket����
-    private ServerSocket serverSocket = null;
-    private boolean serverRuning = false;
-    private OnClickListener CreateClickListener = new OnClickListener() {
-        @Override
-        public void onClick(android.view.View arg0) {
-            // TODO Auto-generated method stub
-            if (serverRuning) {
-                serverRuning = false;
+			}
+		}
+	};
+	// 锟斤拷锟斤拷锟斤拷锟斤拷锟絊erverSocket锟斤拷锟斤拷
+	private ServerSocket serverSocket = null;
+	private boolean serverRuning = false;
+	private OnClickListener CreateClickListener = new OnClickListener() {
+		@Override
+		public void onClick(android.view.View arg0) {
+			// TODO Auto-generated method stub
+			if (serverRuning) {
+				serverRuning = false;
 
-                try {
-                    if (serverSocket != null) {
-                        serverSocket.close();
-                        serverSocket = null;
-                    }
-                    if (mSocketServer != null) {
-                        mSocketServer.close();
-                        mSocketServer = null;
-                    }
-                } catch (IOException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-                mThreadServer.interrupt();
-                CreateButton.setText("��������");
-                recvText.setText("��Ϣ:\n");
-            } else {
-                serverRuning = true;
-                mThreadServer = new Thread(mcreateRunnable);
-                mThreadServer.start();
-                CreateButton.setText("ֹͣ����");
-            }
-        }
-    };
-    // �߳�:�����������������Ϣ
-    private Runnable mcreateRunnable = new Runnable() {
-        public void run() {
-            try {
-                serverSocket = new ServerSocket(0);
+				try {
+					if (serverSocket != null) {
+						serverSocket.close();
+						serverSocket = null;
+					}
+					if (mSocketServer != null) {
+						mSocketServer.close();
+						mSocketServer = null;
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				mThreadServer.interrupt();
+				CreateButton.setText("锟斤拷锟斤拷锟斤拷锟斤拷");
+				recvText.setText("锟斤拷息:\n");
+			} else {
+				serverRuning = true;
+				mThreadServer = new Thread(mcreateRunnable);
+				mThreadServer.start();
+				CreateButton.setText("停止锟斤拷锟斤拷");
+			}
+		}
+	};
+	// 锟竭筹拷:锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟较�
+	private Runnable mcreateRunnable = new Runnable() {
+		public void run() {
+			try {
+				serverSocket = new ServerSocket(0);
 
-                SocketAddress address = null;
-                if (!serverSocket.isBound()) {
-                    serverSocket.bind(address, 0);
-                }
+				SocketAddress address = null;
+				if (!serverSocket.isBound()) {
+					serverSocket.bind(address, 0);
+				}
 
-                getLocalIpAddress();
+				getLocalIpAddress();
 
-                // �������ڵȴ�ͷ�����
-                mSocketServer = serverSocket.accept();
+				// 锟斤拷锟斤拷锟斤拷锟节等达拷头锟斤拷锟斤拷锟�
+				mSocketServer = serverSocket.accept();
 
-                // ���ܿͷ������BufferedReader����
-                mBufferedReaderServer = new BufferedReader(new InputStreamReader(mSocketServer.getInputStream()));
-                // ��ͷ��˷������
-                mPrintWriterServer = new PrintWriter(mSocketServer.getOutputStream(), true);
-                // mPrintWriter.println("������Ѿ��յ���ݣ�");
+				// 锟斤拷锟杰客凤拷锟斤拷锟斤拷锟紹ufferedReader锟斤拷锟斤拷
+				mBufferedReaderServer = new BufferedReader(
+						new InputStreamReader(mSocketServer.getInputStream()));
+				// 锟斤拷头锟斤拷朔锟斤拷锟斤拷锟斤拷
+				mPrintWriterServer = new PrintWriter(
+						mSocketServer.getOutputStream(), true);
+				// mPrintWriter.println("锟斤拷锟斤拷锟斤拷丫锟斤拷盏锟斤拷锟捷ｏ拷");
 
-                Message msg = new Message();
-                msg.what = 0;
-                recvMessageServer = "client�Ѿ������ϣ�\n";
-                mHandler.sendMessage(msg);
+				Message msg = new Message();
+				msg.what = 0;
+				recvMessageServer = "client锟窖撅拷锟斤拷锟斤拷锟较ｏ拷\n";
+				mHandler.sendMessage(msg);
 
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                // e.printStackTrace();
-                Message msg = new Message();
-                msg.what = 0;
-                recvMessageServer = "�����쳣:" + e.getMessage() + e.toString() + "\n";// ��Ϣ����
-                mHandler.sendMessage(msg);
-                return;
-            }
-            char[] buffer = new char[256];
-            int count = 0;
-            while (serverRuning) {
-                try {
-                    // if( (recvMessageServer =
-                    // mBufferedReaderServer.readLine()) != null )//��ȡ�ͷ������
-                    if ((count = mBufferedReaderServer.read(buffer)) > 0)
-                        ;
-                    {
-                        recvMessageServer = getInfoBuff(buffer, count) + "\n";// ��Ϣ����
-                        Message msg = new Message();
-                        msg.what = 0;
-                        mHandler.sendMessage(msg);
-                    }
-                } catch (Exception e) {
-                    recvMessageServer = "�����쳣:" + e.getMessage() + "\n";// ��Ϣ����
-                    Message msg = new Message();
-                    msg.what = 0;
-                    mHandler.sendMessage(msg);
-                    return;
-                }
-            }
-        }
-    };
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				// e.printStackTrace();
+				Message msg = new Message();
+				msg.what = 0;
+				recvMessageServer = "锟斤拷锟斤拷锟届常:" + e.getMessage()
+						+ e.toString() + "\n";// 锟斤拷息锟斤拷锟斤拷
+				mHandler.sendMessage(msg);
+				return;
+			}
+			char[] buffer = new char[256];
+			int count = 0;
+			while (serverRuning) {
+				try {
+					// if( (recvMessageServer =
+					// mBufferedReaderServer.readLine()) != null
+					// )//锟斤拷取锟酵凤拷锟斤拷锟斤拷锟�
+					if ((count = mBufferedReaderServer.read(buffer)) > 0)
+						;
+					{
+						recvMessageServer = getInfoBuff(buffer, count) + "\n";// 锟斤拷息锟斤拷锟斤拷
+						Message msg = new Message();
+						msg.what = 0;
+						mHandler.sendMessage(msg);
+					}
+				} catch (Exception e) {
+					recvMessageServer = "锟斤拷锟斤拷锟届常:" + e.getMessage() + "\n";// 锟斤拷息锟斤拷锟斤拷
+					Message msg = new Message();
+					msg.what = 0;
+					mHandler.sendMessage(msg);
+					return;
+				}
+			}
+		}
+	};
 
-    public String getLocalIpAddress() {
-        try {
-            for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-                NetworkInterface intf = en.nextElement();
-                for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-                    InetAddress inetAddress = enumIpAddr.nextElement();
-                    // if (!inetAddress.isLoopbackAddress())
-                    {
-                        // return inetAddress.getHostAddress();
-                        // recvMessage = inetAddress.getHostAddress()+
-                        // "isAnyLocalAddress: "+inetAddress.isAnyLocalAddress()
-                        // +
-                        // "isLinkLocalAddress: "+inetAddress.isLinkLocalAddress()
-                        // +
-                        // "isSiteLocalAddress: "+inetAddress.isSiteLocalAddress()+"\n";
-                        // mHandler.sendMessage(mHandler.obtainMessage());
-                        // if(inetAddress.isSiteLocalAddress())
-                        {
-                            recvMessageServer += "������IP��" + inetAddress.getHostAddress() + ":" + serverSocket.getLocalPort() + "\n";
-                            // Message msg = new Message();
-                            // msg.what = 0;
-                            // mHandler.sendMessage(msg);
-                        }
-                    }
-                }
-            }
-        } catch (SocketException ex) {
-            recvMessageServer = "��ȡIP��ַ�쳣:" + ex.getMessage() + "\n";// ��Ϣ����
-            Message msg = new Message();
-            msg.what = 0;
-            mHandler.sendMessage(msg);
-        }
-        Message msg = new Message();
-        msg.what = 0;
-        mHandler.sendMessage(msg);
-        return null;
-    }
+	public String getLocalIpAddress() {
+		try {
+			for (Enumeration<NetworkInterface> en = NetworkInterface
+					.getNetworkInterfaces(); en.hasMoreElements();) {
+				NetworkInterface intf = en.nextElement();
+				for (Enumeration<InetAddress> enumIpAddr = intf
+						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+					InetAddress inetAddress = enumIpAddr.nextElement();
+					// if (!inetAddress.isLoopbackAddress())
+					{
+						// return inetAddress.getHostAddress();
+						// recvMessage = inetAddress.getHostAddress()+
+						// "isAnyLocalAddress: "+inetAddress.isAnyLocalAddress()
+						// +
+						// "isLinkLocalAddress: "+inetAddress.isLinkLocalAddress()
+						// +
+						// "isSiteLocalAddress: "+inetAddress.isSiteLocalAddress()+"\n";
+						// mHandler.sendMessage(mHandler.obtainMessage());
+						// if(inetAddress.isSiteLocalAddress())
+						{
+							recvMessageServer += "锟斤拷锟斤拷锟斤拷IP锟斤拷"
+									+ inetAddress.getHostAddress() + ":"
+									+ serverSocket.getLocalPort() + "\n";
+							// Message msg = new Message();
+							// msg.what = 0;
+							// mHandler.sendMessage(msg);
+						}
+					}
+				}
+			}
+		} catch (SocketException ex) {
+			recvMessageServer = "锟斤拷取IP锟斤拷址锟届常:" + ex.getMessage() + "\n";// 锟斤拷息锟斤拷锟斤拷
+			Message msg = new Message();
+			msg.what = 0;
+			mHandler.sendMessage(msg);
+		}
+		Message msg = new Message();
+		msg.what = 0;
+		mHandler.sendMessage(msg);
+		return null;
+	}
 
-    private String getInfoBuff(char[] buff, int count) {
-        char[] temp = new char[count];
-        for (int i = 0; i < count; i++) {
-            temp[i] = buff[i];
-        }
-        return new String(temp);
-    }
+	private String getInfoBuff(char[] buff, int count) {
+		char[] temp = new char[count];
+		for (int i = 0; i < count; i++) {
+			temp[i] = buff[i];
+		}
+		return new String(temp);
+	}
 
-    private OnClickListener StartMouseClickListenerServer = new OnClickListener() {
-        @Override
-        public void onClick(android.view.View arg0) {
-            // TODO Auto-generated method stub
-            if ((serverRuning && mSocketServer != null) || (isConnecting && mSocketClient != null)) {
-                Intent intent = new Intent();
-                intent.setClass(ControlPCActivity.this, mouseActivity.class);
-                startActivity(intent);
-            } else {
-                Toast.makeText(mContext, "û������", Toast.LENGTH_SHORT).show();
-            }
-        }
-    };
+	private OnClickListener StartMouseClickListenerServer = new OnClickListener() {
+		@Override
+		public void onClick(android.view.View arg0) {
+			// TODO Auto-generated method stub
+			if ((serverRuning && mSocketServer != null)
+					|| (isConnecting && mSocketClient != null)) {
+				Intent intent = new Intent();
+				intent.setClass(ControlPCActivity.this, mouseActivity.class);
+				startActivity(intent);
+			} else {
+				Toast.makeText(mContext, "没锟斤拷锟斤拷锟斤拷", Toast.LENGTH_SHORT)
+						.show();
+			}
+		}
+	};
 
-    public void onDestroy() {
-        super.onDestroy();
-        if (isConnecting) {
-            isConnecting = false;
-            try {
-                if (mSocketClient != null) {
-                    mSocketClient.close();
-                    mSocketClient = null;
+	public void onDestroy() {
+		super.onDestroy();
+		if (isConnecting) {
+			isConnecting = false;
+			try {
+				if (mSocketClient != null) {
+					mSocketClient.close();
+					mSocketClient = null;
 
-                    mPrintWriterClient.close();
-                    mPrintWriterClient = null;
-                }
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            mThreadClient.interrupt();
-        }
-        if (serverRuning) {
-            serverRuning = false;
-            try {
-                if (serverSocket != null) {
-                    serverSocket.close();
-                    serverSocket = null;
-                }
-                if (mSocketServer != null) {
-                    mSocketServer.close();
-                    mSocketServer = null;
-                }
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            mThreadServer.interrupt();
-        }
-    }
+					mPrintWriterClient.close();
+					mPrintWriterClient = null;
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			mThreadClient.interrupt();
+		}
+		if (serverRuning) {
+			serverRuning = false;
+			try {
+				if (serverSocket != null) {
+					serverSocket.close();
+					serverSocket = null;
+				}
+				if (mSocketServer != null) {
+					mSocketServer.close();
+					mSocketServer = null;
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			mThreadServer.interrupt();
+		}
+	}
 }

@@ -1,5 +1,7 @@
 package com.badlogic.socket;
 
+import com.badlogic.R;
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.GestureDetector;
@@ -9,12 +11,10 @@ import android.view.MotionEvent;
 import android.view.View.OnClickListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
+import android.widget.Button;
 import android.widget.RelativeLayout;
-
-import com.WazaBe.HoloEverywhere.widget.Button;
-import com.WazaBe.HoloEverywhere.widget.TextView;
-import com.WazaBe.HoloEverywhere.widget.Toast;
-import com.badlogic.R;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class mouseActivity extends Activity implements OnTouchListener, OnGestureListener, OnDoubleTapListener {
     private GestureDetector mGestureDetector;
@@ -27,11 +27,11 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
     final int MOUSEEVENTF_RIGHTDOWN = 0x0004; /* right button down */
     final int MOUSEEVENTF_RIGHTUP = 0x0005; /* right button up */
 
-    final int MOUSEEVENTF_TAP = 0x0006; /* ���� */
-    final int MOUSEEVENTF_DOUBLETAP = 0x0007; /* ˫�� */
+    final int MOUSEEVENTF_TAP = 0x0006; /* 锟斤拷锟斤拷 */
+    final int MOUSEEVENTF_DOUBLETAP = 0x0007; /* 双锟斤拷 */
 
-    final int MOUSEEVENTF_ROLLUP = 0x0008; /* �����϶����� */
-    final int MOUSEEVENTF_ROLLDOWN = 0x0009; /* �����϶����� */
+    final int MOUSEEVENTF_ROLLUP = 0x0008; /* 锟斤拷锟斤拷锟较讹拷锟斤拷锟斤拷 */
+    final int MOUSEEVENTF_ROLLDOWN = 0x0009; /* 锟斤拷锟斤拷锟较讹拷锟斤拷锟斤拷 */
 
     private TextView touchInof;
     private Button mouseRightButton, mouseLeftButton, rollUpButton, rollDownButton;
@@ -69,14 +69,14 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
         public void onClick(android.view.View arg0) {
             // TODO Auto-generated method stub
             switch (arg0.getId()) {
-            case R.id.rightButton:// �һ�
+            case R.id.rightButton:// 锟揭伙拷
                 sendMessage(MOUSEEVENTF_RIGHTUP + "");
                 break;
-            case R.id.leftButton:// ����
+            case R.id.leftButton:// 锟斤拷锟斤拷
                 sendMessage(MOUSEEVENTF_TAP + "");
                 break;
 
-            case R.id.rollerButtonUp:// �����϶�����
+            case R.id.rollerButtonUp:// 锟斤拷锟斤拷锟较讹拷锟斤拷锟斤拷
                 if (clickButton != 0) {
                     clickButton = 0;
                     mThread.interrupt();
@@ -85,7 +85,7 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
                     sendMessage(MOUSEEVENTF_ROLLUP + "");
                 break;
 
-            case R.id.rollerButtonDown:// �����϶�����
+            case R.id.rollerButtonDown:// 锟斤拷锟斤拷锟较讹拷锟斤拷锟斤拷
                 if (clickButton != 0) {
                     clickButton = 0;
                     mThread.interrupt();
@@ -123,19 +123,19 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
     private void sendMessage(String msgText) {
         if (ControlPCActivity.mPrintWriterClient != null) {
             try {
-                ControlPCActivity.mPrintWriterClient.print(msgText);// ���͸������
+                ControlPCActivity.mPrintWriterClient.print(msgText);// 锟斤拷锟酵革拷锟斤拷锟斤拷锟�
                 ControlPCActivity.mPrintWriterClient.flush();
             } catch (Exception e) {
                 // TODO: handle exception
-                Toast.makeText(this, "�����쳣��" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "锟斤拷锟斤拷锟届常锟斤拷" + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         } else if (ControlPCActivity.mPrintWriterServer != null) {
             try {
-                ControlPCActivity.mPrintWriterServer.print(msgText);// ���͸������
+                ControlPCActivity.mPrintWriterServer.print(msgText);// 锟斤拷锟酵革拷锟斤拷锟斤拷锟�
                 ControlPCActivity.mPrintWriterServer.flush();
             } catch (Exception e) {
                 // TODO: handle exception
-                Toast.makeText(this, "�����쳣��" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "锟斤拷锟斤拷锟届常锟斤拷" + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -154,7 +154,7 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
                     touchMoveX = event.getX();
                     touchMoveY = event.getY();
                 } else {
-                    sendMessage(MOUSEEVENTF_MOVE + ":" + (event.getX() - touchMoveX) + ";" + (event.getY() - touchMoveY));// �����
+                    sendMessage(MOUSEEVENTF_MOVE + ":" + (event.getX() - touchMoveX) + ";" + (event.getY() - touchMoveY));// 锟斤拷锟斤拷锟�
 
                     touchInof.setText("onTouch move: " + (event.getX() - touchMoveX) + " : " + (event.getY() - touchMoveY));
                     touchMoveX = event.getX();
@@ -163,11 +163,11 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 touchInof.setText("onTouch up: " + event.getX() + " : " + event.getY());
                 isLongPress = false;
-                sendMessage(MOUSEEVENTF_LEFTUP + "");// �����
+                sendMessage(MOUSEEVENTF_LEFTUP + "");// 锟斤拷锟斤拷锟�
             } else {
                 touchMoveX = 0;
                 isLongPress = false;
-                sendMessage(MOUSEEVENTF_CANCEL + "");// �����
+                sendMessage(MOUSEEVENTF_CANCEL + "");// 锟斤拷锟斤拷锟�
             }
             return false;
         }
@@ -184,17 +184,17 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
     @Override
     public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
         // TODO Auto-generated method stub
-        // �û����´������������ƶ����ɿ�,���ʱ�������ָ�˶����м��ٶȵġ�
-        // ��1��MotionEvent ACTION_DOWN,
-        // ���ACTION_MOVE, 1��ACTION_UP����
-        // e1����1��ACTION_DOWN MotionEvent
-        // e2�����һ��ACTION_MOVE MotionEvent
-        // velocityX��X���ϵ��ƶ��ٶȣ�����/��
-        // velocityY��Y���ϵ��ƶ��ٶȣ�����/��
-        touchInof.setText("onFling:" + "\n���������:" + event1.getX() + " : " + event1.getY() + "\n�������յ�:" + event2.getX() + " : "
-                + event2.getY() + "\nˮƽ������ٶ�:" + velocityX + "\n��ֱ������ٶ�:" + velocityY);
+        // 锟矫伙拷锟斤拷锟铰达拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟狡讹拷锟斤拷锟缴匡拷,锟斤拷锟绞憋拷锟斤拷锟斤拷锟斤拷指锟剿讹拷锟斤拷锟叫硷拷锟劫度的★拷
+        // 锟斤拷1锟斤拷MotionEvent ACTION_DOWN,
+        // 锟斤拷锟紸CTION_MOVE, 1锟斤拷ACTION_UP锟斤拷锟斤拷
+        // e1锟斤拷锟斤拷1锟斤拷ACTION_DOWN MotionEvent
+        // e2锟斤拷锟斤拷锟揭伙拷锟紸CTION_MOVE MotionEvent
+        // velocityX锟斤拷X锟斤拷锟较碉拷锟狡讹拷锟劫度ｏ拷锟斤拷锟斤拷/锟斤拷
+        // velocityY锟斤拷Y锟斤拷锟较碉拷锟狡讹拷锟劫度ｏ拷锟斤拷锟斤拷/锟斤拷
+        touchInof.setText("onFling:" + "\n锟斤拷锟斤拷锟斤拷锟斤拷锟�" + event1.getX() + " : " + event1.getY() + "\n锟斤拷锟斤拷锟斤拷锟秸碉拷:" + event2.getX() + " : "
+                + event2.getY() + "\n水平锟斤拷锟斤拷锟斤拷俣锟�" + velocityX + "\n锟斤拷直锟斤拷锟斤拷锟斤拷俣锟�" + velocityY);
 
-        sendMessage(MOUSEEVENTF_MOVE + ":" + velocityX + ";" + velocityY);// �����
+        sendMessage(MOUSEEVENTF_MOVE + ":" + velocityX + ";" + velocityY);// 锟斤拷锟斤拷锟�
 
         return false;
     }
@@ -205,15 +205,15 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
         touchInof.setText("onLongPress: \n" + e.getX() + " : " + e.getY());
     }
 
-    // ����ʱ������e1Ϊdownʱ��MotionEvent��e2Ϊmoveʱ��MotionEvent
+    // 锟斤拷锟斤拷时锟斤拷锟斤拷锟斤拷e1为down时锟斤拷MotionEvent锟斤拷e2为move时锟斤拷MotionEvent
     @Override
     public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX, float distanceY) {
         // TODO Auto-generated method stub
 
-        touchInof.setText("onScroll:" + "\n���������:" + event1.getX() + " : " + event1.getY() + "\n�������յ�:" + event2.getX() + " : "
-                + event2.getY() + "\nˮƽ����ľ���:" + distanceX + "\n��ֱ����ľ���:" + distanceY);
+        touchInof.setText("onScroll:" + "\n锟斤拷锟斤拷锟斤拷锟斤拷锟�" + event1.getX() + " : " + event1.getY() + "\n锟斤拷锟斤拷锟斤拷锟秸碉拷:" + event2.getX() + " : "
+                + event2.getY() + "\n水平锟斤拷锟斤拷木锟斤拷锟�" + distanceX + "\n锟斤拷直锟斤拷锟斤拷木锟斤拷锟�" + distanceY);
 
-        sendMessage(MOUSEEVENTF_MOVE + ":" + distanceX + ";" + distanceY);// �����
+        sendMessage(MOUSEEVENTF_MOVE + ":" + distanceX + ";" + distanceY);// 锟斤拷锟斤拷锟�
 
         return false;
     }
@@ -223,7 +223,7 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
         // TODO Auto-generated method stub
         touchInof.setText("onShowPress: \n" + e.getX() + " : " + e.getY());
         isLongPress = true;
-        sendMessage(MOUSEEVENTF_LEFTDOWN + "");// �����
+        sendMessage(MOUSEEVENTF_LEFTDOWN + "");// 锟斤拷锟斤拷锟�
     }
 
     @Override
@@ -233,7 +233,7 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
         return false;
     }
 
-    // �ڶ��ε���downʱ������eΪ��һ��downʱ��MotionEvent
+    // 锟节讹拷锟轿碉拷锟斤拷down时锟斤拷锟斤拷锟斤拷e为锟斤拷一锟斤拷down时锟斤拷MotionEvent
     @Override
     public boolean onDoubleTap(MotionEvent e) {
         // TODO Auto-generated method stub
@@ -243,7 +243,7 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
         return false;
     }
 
-    // �ڶ��ε���down,move��upʱ��������eΪ��ͬʱ���µ�MotionEvent
+    // 锟节讹拷锟轿碉拷锟斤拷down,move锟斤拷up时锟斤拷锟斤拷锟斤拷锟斤拷e为锟斤拷同时锟斤拷锟铰碉拷MotionEvent
     @Override
     public boolean onDoubleTapEvent(MotionEvent e) {
         // TODO Auto-generated method stub
@@ -251,7 +251,7 @@ public class mouseActivity extends Activity implements OnTouchListener, OnGestur
         return false;
     }
 
-    // ���һ�ε�������ȷ��û�ж����¼��󴥷���300ms����eΪdownʱ��MotionEvent
+    // 锟斤拷锟揭伙拷蔚锟斤拷锟斤拷锟斤拷锟饺凤拷锟矫伙拷卸锟斤拷锟斤拷录锟斤拷蟠シ锟斤拷锟�00ms锟斤拷锟斤拷e为down时锟斤拷MotionEvent
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
         // TODO Auto-generated method stub
