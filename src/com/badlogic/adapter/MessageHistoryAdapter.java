@@ -19,7 +19,7 @@ public class MessageHistoryAdapter extends BaseAdapter {
     private Context context;
     private ArrayList<MessageItem> dataList;
     private LayoutInflater inflater;
-    
+
     public MessageHistoryAdapter(Context context, ArrayList<MessageItem> dataList) {
         this.context = context;
         this.dataList = dataList;
@@ -59,26 +59,37 @@ public class MessageHistoryAdapter extends BaseAdapter {
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-        
+
         setData(dataItem, viewHolder);
         return convertView;
     }
 
-    private void setData(MessageItem data,ViewHolder viewHolder) {
-    	if(data.isUser()){
-        	viewHolder.rightTextContent.setText(data.getContent());
-        	viewHolder.rightLayout.setVisibility(View.VISIBLE);
-        	viewHolder.leftLayout.setVisibility(View.GONE);
-        	viewHolder.rightImageContent.setBackgroundResource(DataProvider.imageRes[Integer.parseInt(data.getSmileIconName())]);
-        }else{
+    private void setData(MessageItem data, ViewHolder viewHolder) {
+        if (data.isUser()) {
+            viewHolder.rightTextContent.setText(data.getContent());
+            viewHolder.rightLayout.setVisibility(View.VISIBLE);
+            viewHolder.leftLayout.setVisibility(View.GONE);
+            if (data.getSmileIconName() != null) {
+                viewHolder.rightImageContent.setBackgroundResource(DataProvider.imageRes[Integer.parseInt(data.getSmileIconName())]);
+                viewHolder.rightImageContent.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.rightImageContent.setVisibility(View.GONE);
+            }
+        } else {
             viewHolder.leftTextContent.setText(data.getContent());
             viewHolder.rightLayout.setVisibility(View.GONE);
             viewHolder.leftLayout.setVisibility(View.VISIBLE);
+            if (data.getSmileIconName() != null) {
+                viewHolder.rightImageContent.setBackgroundResource(DataProvider.imageRes[Integer.parseInt(data.getSmileIconName())]);
+                viewHolder.rightImageContent.setVisibility(View.VISIBLE);
+            } else {
+                viewHolder.rightImageContent.setVisibility(View.GONE);
+            }
         }
-    	
-	}
 
-	static class ViewHolder {
+    }
+
+    static class ViewHolder {
         public TextView leftTextContent;
         public TextView rightTextContent;
         public ImageView rightImageContent;

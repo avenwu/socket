@@ -291,9 +291,13 @@ public class SendFeed extends Activity {
 		MessageItem item = new MessageItem();
 		item.setSmileIconName(position);
 		messageHistoryList.add(item);
-		messageHistoryAdapter.notifyDataSetChanged();
-
+		notifyChange();
 	}
+
+    private void notifyChange() {
+        messageHistoryAdapter.notifyDataSetChanged();
+		historyMessageListView.setSelection(messageHistoryList.size()-1);
+    }
 
 	private void initLBS() {
 		mOption = new LocationClientOption();
@@ -328,7 +332,7 @@ public class SendFeed extends Activity {
 		item.setContent(status);
 		item.setUser(true);
 		messageHistoryList.add(item);
-		messageHistoryAdapter.notifyDataSetChanged();
+		notifyChange();
 
 	}
 

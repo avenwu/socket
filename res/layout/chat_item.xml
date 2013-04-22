@@ -12,9 +12,11 @@
 
         <TextView
             android:id="@+id/tv_left_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/black" />
+            style="@style/chat_text_content" />
+
+        <ImageView
+            android:id="@+id/iv_left_avatar"
+            style="@style/chat_image_content" />
     </LinearLayout>
 
     <LinearLayout
@@ -27,16 +29,11 @@
 
         <TextView
             android:id="@+id/tv_right_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/black" />
-        <ImageView 
+            style="@style/chat_text_content" />
+
+        <ImageView
             android:id="@+id/iv_right_avatar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="5dp"
-            />
+            style="@style/chat_image_content" />
     </LinearLayout>
 
 </RelativeLayout>
