@@ -345,7 +345,6 @@ public class ControlPCActivity extends Activity {
 					// mBufferedReaderServer.readLine()) != null
 					// )//锟斤拷取锟酵凤拷锟斤拷锟斤拷锟�
 					if ((count = mBufferedReaderServer.read(buffer)) > 0)
-						;
 					{
 						recvMessageServer = getInfoBuff(buffer, count) + "\n";// 锟斤拷息锟斤拷锟斤拷
 						Message msg = new Message();
