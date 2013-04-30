@@ -1,5 +1,7 @@
 package com.badlogic.utils;
 
+import com.badlogic.constant.Config;
+
 public class StringHelper
 {
 	public static String decodeContent(String s)

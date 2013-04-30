@@ -8,7 +8,7 @@ public class IPHelperTest extends TestCase
 {
 	private void testIPScaner()
 	{
-		IPHelper.getAllIp();
+//		IPHelper.getAllIp();
 	}
 
 }

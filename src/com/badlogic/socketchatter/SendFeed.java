@@ -41,17 +41,16 @@ import android.widget.Toast;
 import com.badlogic.R;
 import com.badlogic.adapter.EmotionStaticAdapter;
 import com.badlogic.adapter.MessageHistoryAdapter;
+import com.badlogic.constant.Cons;
 import com.badlogic.model.MessageItem;
 import com.badlogic.providers.DataProvider;
-import com.badlogic.utils.Cons;
 import com.badlogic.utils.StringHelper;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 
-public class SendFeed extends Activity
-{
+public class SendFeed extends Activity {
 	private static int PORT = 3000;
 	private ImageView mBack;
 	private ImageView mPublish;
@@ -86,16 +85,17 @@ public class SendFeed extends Activity
 	private PrintWriter clientWriter;
 	private boolean isServerConnected;
 	private boolean isConnecttingServer;
-
-	protected void onCreate(Bundle savedInstanceState)
-	{
+	private String IP;
+	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.newsfeedpublish);
-
-		StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().detectDiskReads()
-				.detectDiskWrites().detectNetwork().penaltyLog().build());
-		StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder().detectLeakedSqlLiteObjects()
-				.penaltyLog().penaltyDeath().build());
+		IP = getIntent().getStringExtra("ip_address");
+		StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+				.detectDiskReads().detectDiskWrites().detectNetwork()
+				.penaltyLog().build());
+		StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+				.detectLeakedSqlLiteObjects().penaltyLog().penaltyDeath()
+				.build());
 
 		initLBS();
 		findViewById();
@@ -104,28 +104,28 @@ public class SendFeed extends Activity
 
 	}
 
-	public void initRes()
-	{
-		mPoi_off_icon = getResources().getDrawable(R.drawable.v5_0_1_publisher_poi_icon);
+	public void initRes() {
+		mPoi_off_icon = getResources().getDrawable(
+				R.drawable.v5_0_1_publisher_poi_icon);
 		mPoi_off_icon.setBounds(0, 0, mPoi_off_icon.getMinimumWidth(),
 				mPoi_off_icon.getMinimumHeight());
-		mPoi_on_icon = getResources().getDrawable(R.drawable.v5_0_1_publisher_poi_active_icon);
+		mPoi_on_icon = getResources().getDrawable(
+				R.drawable.v5_0_1_publisher_poi_active_icon);
 		mPoi_on_icon.setBounds(0, 0, mPoi_on_icon.getMinimumWidth(),
 				mPoi_on_icon.getMinimumHeight());
-		emotionStaticAdapter = new EmotionStaticAdapter(this.getApplicationContext(),
-				DataProvider.imageRes);
+		emotionStaticAdapter = new EmotionStaticAdapter(
+				this.getApplicationContext(), DataProvider.imageRes);
 		mEmoticons.setAdapter(emotionStaticAdapter);
 		messageHistoryList = getData();
-		messageHistoryAdapter = new MessageHistoryAdapter(this.getApplicationContext(),
-				messageHistoryList);
+		messageHistoryAdapter = new MessageHistoryAdapter(
+				this.getApplicationContext(), messageHistoryList);
 		historyMessageListView.setAdapter(messageHistoryAdapter);
 		mClient.start();
 		mLBSIsReceiver = true;
 		mClient.requestLocation();
 	}
 
-	private void findViewById()
-	{
+	private void findViewById() {
 		mBack = (ImageView) findViewById(R.id.newsfeedpublish_back);
 		mPublish = (ImageView) findViewById(R.id.newsfeedpublish_publish);
 		mContent = (EditText) findViewById(R.id.newsfeedpublish_content);
@@ -148,8 +148,7 @@ public class SendFeed extends Activity
 	/*
 	 * TODO
 	 */
-	private ArrayList<MessageItem> getData()
-	{
+	private ArrayList<MessageItem> getData() {
 		ArrayList<MessageItem> data = new ArrayList<MessageItem>();
 		// for (int i = 0; i < 20; i++) {
 		// data.add("How are you? " + i);
@@ -158,81 +157,65 @@ public class SendFeed extends Activity
 		return data;
 	}
 
-	private void setListeners()
-	{
-		mBack.setOnClickListener(new OnClickListener()
-		{
+	private void setListeners() {
+		mBack.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				if (mContent.getText().toString().trim().length() > 0)
-				{
+			public void onClick(View v) {
+				if (mContent.getText().toString().trim().length() > 0) {
 					backDialog();
-				} else
-				{
+				} else {
 					finish();
 					overridePendingTransition(0, R.anim.roll_down);
 				}
 			}
 		});
-		mPublish.setOnClickListener(new OnClickListener()
-		{
+		mPublish.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				if (mContent.getText().toString().trim().length() == 0)
-				{
-					Toast.makeText(SendFeed.this, R.string.content_empty, Toast.LENGTH_SHORT)
-							.show();
-				} else
-				{
-					try
-					{
+			public void onClick(View v) {
+				if (mContent.getText().toString().trim().length() == 0) {
+					Toast.makeText(SendFeed.this, R.string.content_empty,
+							Toast.LENGTH_SHORT).show();
+				} else {
+					try {
 						publishNewsFeed(mContent.getText().toString().trim());
-					} catch (IOException e)
-					{
+					} catch (IOException e) {
 						e.printStackTrace();
 					}
 					mContent.setText("");
 				}
 			}
 		});
-		mContent.setOnClickListener(new OnClickListener()
-		{
+		mContent.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				if (mEmoticons.isShown())
-				{
+			public void onClick(View v) {
+				if (mEmoticons.isShown()) {
 					mEmoticons.setVisibility(View.GONE);
-					mEmoticon.setImageResource(R.drawable.v5_0_1_publisher_emotion_button);
+					mEmoticon
+							.setImageResource(R.drawable.v5_0_1_publisher_emotion_button);
 				}
 			}
 		});
-		mContent.addTextChangedListener(new TextWatcher()
-		{
+		mContent.addTextChangedListener(new TextWatcher() {
 			private CharSequence temp;
 			private int selectionStart;
 			private int selectionEnd;
 
-			public void onTextChanged(CharSequence s, int start, int before, int count)
-			{
+			public void onTextChanged(CharSequence s, int start, int before,
+					int count) {
 				temp = s;
 			}
 
-			public void beforeTextChanged(CharSequence s, int start, int count, int after)
-			{
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after) {
 
 			}
 
-			public void afterTextChanged(Editable s)
-			{
+			public void afterTextChanged(Editable s) {
 				int number = s.length();
 				mCount.setText(String.valueOf(number) + "/140");
 				selectionStart = mContent.getSelectionStart();
 				selectionEnd = mCount.getSelectionEnd();
-				if (temp.length() > 140)
-				{
+				if (temp.length() > 140) {
 					s.delete(selectionStart - 1, selectionEnd);
 					int tempSelection = selectionEnd;
 					mContent.setText(s);
@@ -261,46 +244,37 @@ public class SendFeed extends Activity
 		 * CurrentLocation.class)); // overridePendingTransition(R.anim.roll_up,
 		 * R.anim.roll); } } });
 		 */
-		mVoice.setOnClickListener(new OnClickListener()
-		{
+		mVoice.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				try
-				{
-					if (isServerConnected)
-					{
-						Toast.makeText(SendFeed.this, "关闭Server服务", Toast.LENGTH_SHORT).show();
+			public void onClick(View v) {
+				try {
+					if (isServerConnected) {
+						Toast.makeText(SendFeed.this, "关闭Server服务",
+								Toast.LENGTH_SHORT).show();
 						shutDownServer();
-					} else
-					{
-						Toast.makeText(SendFeed.this, "开启Server服务", Toast.LENGTH_SHORT).show();
-						new Thread(new Runnable()
-						{
+					} else {
+						Toast.makeText(SendFeed.this, "开启Server服务",
+								Toast.LENGTH_SHORT).show();
+						new Thread(new Runnable() {
 							@Override
-							public void run()
-							{
-								try
-								{
-									try
-									{
+							public void run() {
+								try {
+									try {
 										startServer();
-									} catch (InterruptedException e)
-									{
+									} catch (InterruptedException e) {
 										e.printStackTrace();
 									}
-								} catch (IOException e)
-								{
+								} catch (IOException e) {
 									e.printStackTrace();
 								}
 							}
 						}).start();
 					}
-				} catch (IOException e)
-				{
+				} catch (IOException e) {
 					e.printStackTrace();
-					Toast.makeText(getApplicationContext(), "Start Server failed...",
-							Toast.LENGTH_SHORT).show();
+					Toast.makeText(getApplicationContext(),
+							"Start Server failed...", Toast.LENGTH_SHORT)
+							.show();
 				}
 			}
 		});
@@ -319,99 +293,82 @@ public class SendFeed extends Activity
 		 * (!mClient.isStarted()) { mClient.start(); }
 		 * mClient.requestLocation(); } } });
 		 */
-		mPoi.setOnClickListener(new OnClickListener()
-		{
+		mPoi.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
-				try
-				{
+			public void onClick(View v) {
+				try {
 					if (isConnecttingServer)
 						shutDownConnect();
 					else
-						new Thread(new Runnable()
-						{
+						new Thread(new Runnable() {
 							@Override
-							public void run()
-							{
-								try
-								{
-									try
-									{
+							public void run() {
+								try {
+									try {
 										connectServer();
-									} catch (InterruptedException e)
-									{
+									} catch (InterruptedException e) {
 										// TODO Auto-generated catch block
 										e.printStackTrace();
 									}
-								} catch (IOException e)
-								{
+								} catch (IOException e) {
 									e.printStackTrace();
 								}
 							}
 						}).start();
-				} catch (IOException e)
-				{
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
 		});
 
-		mImage.setOnClickListener(new OnClickListener()
-		{
+		mImage.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���", Toast.LENGTH_SHORT).show();
+			public void onClick(View v) {
+				Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���",
+						Toast.LENGTH_SHORT).show();
 			}
 		});
-		mAt.setOnClickListener(new OnClickListener()
-		{
+		mAt.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���", Toast.LENGTH_SHORT).show();
+			public void onClick(View v) {
+				Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���",
+						Toast.LENGTH_SHORT).show();
 			}
 		});
-		mEmoticon.setOnClickListener(new OnClickListener()
-		{
+		mEmoticon.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View v)
-			{
-				if (mEmoticons.isShown())
-				{
+			public void onClick(View v) {
+				if (mEmoticons.isShown()) {
 					mEmoticons.setVisibility(View.GONE);
-					mEmoticon.setImageResource(R.drawable.v5_0_1_publisher_emotion_button);
-				} else
-				{
+					mEmoticon
+							.setImageResource(R.drawable.v5_0_1_publisher_emotion_button);
+				} else {
 					mEmoticons.setVisibility(View.VISIBLE);
-					mEmoticon.setImageResource(R.drawable.v5_0_1_publisher_pad_button);
+					mEmoticon
+							.setImageResource(R.drawable.v5_0_1_publisher_pad_button);
 					((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE))
-							.hideSoftInputFromWindow(SendFeed.this.getCurrentFocus()
-									.getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+							.hideSoftInputFromWindow(SendFeed.this
+									.getCurrentFocus().getWindowToken(),
+									InputMethodManager.HIDE_NOT_ALWAYS);
 				}
 			}
 		});
-		mEmoticons.setOnItemClickListener(new OnItemClickListener()
-		{
+		mEmoticons.setOnItemClickListener(new OnItemClickListener() {
 
-			public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-			{
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
 				int temp = DataProvider.imageRes[position];
 				sendSmileIcon(position);
 			}
 
 		});
-		mClient.registerLocationListener(new BDLocationListener()
-		{
+		mClient.registerLocationListener(new BDLocationListener() {
 
-			public void onReceivePoi(BDLocation arg0)
-			{
+			public void onReceivePoi(BDLocation arg0) {
 
 			}
 
-			public void onReceiveLocation(BDLocation arg0)
-			{
+			public void onReceiveLocation(BDLocation arg0) {
 				// mLBSAddress = arg0.getAddrStr();
 				// mApplication.mLocation = arg0.getAddrStr();
 				// mApplication.mLatitude = arg0.getLatitude();
@@ -419,40 +376,35 @@ public class SendFeed extends Activity
 				// handler.sendEmptyMessage(2);
 			}
 		});
-		setting.setOnClickListener(new OnClickListener()
-		{
+		setting.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
+			public void onClick(View v) {
 
 			}
 		});
 	}
 
-	protected void connectServer() throws IOException, InterruptedException
-	{
+	protected void connectServer() throws IOException, InterruptedException {
 		isConnecttingServer = true;
-		InetAddress address = InetAddress.getLocalHost();
-		String IP = address.getHostAddress();
+		// InetAddress address = InetAddress.getLocalHost();
+		// String IP = address.getHostAddress();
 		Log.e("SendFeed", "IP:" + IP);
 		clientRequestSocket = new Socket(IP, PORT);
 		clientReader = new BufferedReader(new InputStreamReader(
 				clientRequestSocket.getInputStream()));
-		clientWriter = new PrintWriter(
-				new OutputStreamWriter(clientRequestSocket.getOutputStream()), true);
+		clientWriter = new PrintWriter(new OutputStreamWriter(
+				clientRequestSocket.getOutputStream()), true);
 		// clientWriter.print("request connect\n");
 		Log.e("SendFeed", "requset connect to server");
 		// clientWriter.flush();
-		while (isConnecttingServer)
-		{
+		while (isConnecttingServer) {
 			String content = clientReader.readLine();
 			Log.e("SendFeed", "Received content from server:%s" + content);
 			Thread.sleep(1000);
 		}
 	}
 
-	protected void shutDownConnect() throws IOException
-	{
+	protected void shutDownConnect() throws IOException {
 		if (clientReader != null)
 			clientReader.close();
 		if (clientWriter != null)
@@ -462,8 +414,7 @@ public class SendFeed extends Activity
 		isConnecttingServer = false;
 	}
 
-	private void startServer() throws IOException, InterruptedException
-	{
+	private void startServer() throws IOException, InterruptedException {
 		serverReceiver = new ServerSocket(PORT);
 		isServerConnected = true;
 		serverResponseSocket = serverReceiver.accept();
@@ -475,21 +426,20 @@ public class SendFeed extends Activity
 		StringBuffer line = new StringBuffer();
 		char[] buffer = new char[1024];
 		int length = 0;
-		while (isServerConnected)
-		{
-			while ((length = serveReader.read(buffer, 0, buffer.length)) != -1)
-			{
-				Log.e("SendFeed", "receive conetent from client:" + new String(buffer));
+		while (isServerConnected) {
+			while ((length = serveReader.read(buffer, 0, buffer.length)) != -1) {
+				Log.e("SendFeed", "receive conetent from client:"
+						+ new String(buffer));
 				handler.obtainMessage(Cons.UPDATE_MSG_RECEIVED_CLIENT,
-						StringHelper.undecodeContent(new String(buffer))).sendToTarget();
+						StringHelper.undecodeContent(new String(buffer)))
+						.sendToTarget();
 			}
 			Thread.sleep(100);
 		}
 		Log.e("SendFeed", "server end:");
 	}
 
-	private void shutDownServer() throws IOException
-	{
+	private void shutDownServer() throws IOException {
 		if (serveReader != null)
 			serveReader.close();
 		if (serverResponseSocket != null)
@@ -497,22 +447,19 @@ public class SendFeed extends Activity
 		isServerConnected = false;
 	}
 
-	private void sendSmileIcon(int position)
-	{
+	private void sendSmileIcon(int position) {
 		MessageItem item = new MessageItem();
 		item.setSmileIconName(position);
 		messageHistoryList.add(item);
 		notifyChange();
 	}
 
-	private void notifyChange()
-	{
+	private void notifyChange() {
 		messageHistoryAdapter.notifyDataSetChanged();
 		historyMessageListView.setSelection(messageHistoryList.size() - 1);
 	}
 
-	private void initLBS()
-	{
+	private void initLBS() {
 		mOption = new LocationClientOption();
 		mOption.setOpenGps(true);
 		mOption.setCoorType("bd09ll");
@@ -525,8 +472,7 @@ public class SendFeed extends Activity
 		mClient = new LocationClient(getApplicationContext(), mOption);
 	}
 
-	private void publishNewsFeed(String status) throws IOException
-	{
+	private void publishNewsFeed(String status) throws IOException {
 		MessageItem item = new MessageItem();
 		item.setContent(status);
 		item.setUser(true);
@@ -538,100 +484,93 @@ public class SendFeed extends Activity
 		Log.e("SendFeed", "flush content" + status);
 	}
 
-	Handler handler = new Handler()
-	{
+	Handler handler = new Handler() {
 
-		public void handleMessage(Message msg)
-		{
+		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
-			switch (msg.what)
-			{
-			case 0:
-				publishDialogShow();
-				break;
-			case 1:
-				publishDialogDismiss();
-				switch (Integer.parseInt(msg.obj.toString()))
-				{
-				case 1:
-					mContent.setText("");
-					Toast.makeText(SendFeed.this, "�����ɹ�", Toast.LENGTH_SHORT).show();
-					finish();
-					overridePendingTransition(0, R.anim.roll_down);
+			switch (msg.what) {
+				case 0 :
+					publishDialogShow();
+					break;
+				case 1 :
+					publishDialogDismiss();
+					switch (Integer.parseInt(msg.obj.toString())) {
+						case 1 :
+							mContent.setText("");
+							Toast.makeText(SendFeed.this, "�����ɹ�",
+									Toast.LENGTH_SHORT).show();
+							finish();
+							overridePendingTransition(0, R.anim.roll_down);
+							break;
+
+						case 10400 :
+							Toast.makeText(SendFeed.this, "״̬���¹���Ƶ��",
+									Toast.LENGTH_SHORT).show();
+							break;
+						case 10401 :
+							Toast.makeText(SendFeed.this, "״̬������޶�����",
+									Toast.LENGTH_SHORT).show();
+							break;
+
+						case 10402 :
+							Toast.makeText(SendFeed.this, "״̬�����ݺ��зǷ��ַ�",
+									Toast.LENGTH_SHORT).show();
+							break;
+					}
 					break;
 
-				case 10400:
-					Toast.makeText(SendFeed.this, "״̬���¹���Ƶ��", Toast.LENGTH_SHORT).show();
+				case 2 :
+					// if (mClient.isStarted()) {
+					// mClient.stop();
+					// }
+					// if (mLBSAddress != null) {
+					// mPlace.setText(mLBSAddress);
+					// mPlace.setCompoundDrawables(mPoi_on_icon, null, null,
+					// null);
+					// mList.setVisibility(View.VISIBLE);
+					// mSperator.setVisibility(View.VISIBLE);
+					// }
 					break;
-				case 10401:
-					Toast.makeText(SendFeed.this, "״̬������޶�����", Toast.LENGTH_SHORT).show();
+				case Cons.UPDATE_MSG_RECEIVED_CLIENT :
+					String result = (String) msg.obj;
+					if (result != null) {
+						MessageItem item = new MessageItem();
+						item.setContent(result);
+						item.setUser(false);
+						messageHistoryList.add(item);
+						Log.e("SendFeed", "update contnet" + result);
+						messageHistoryAdapter.notifyDataSetChanged();
+					}
 					break;
-
-				case 10402:
-					Toast.makeText(SendFeed.this, "״̬�����ݺ��зǷ��ַ�", Toast.LENGTH_SHORT).show();
+				default :
 					break;
-				}
-				break;
-
-			case 2:
-				// if (mClient.isStarted()) {
-				// mClient.stop();
-				// }
-				// if (mLBSAddress != null) {
-				// mPlace.setText(mLBSAddress);
-				// mPlace.setCompoundDrawables(mPoi_on_icon, null, null, null);
-				// mList.setVisibility(View.VISIBLE);
-				// mSperator.setVisibility(View.VISIBLE);
-				// }
-				break;
-			case Cons.UPDATE_MSG_RECEIVED_CLIENT:
-				String result = (String) msg.obj;
-				if (result != null)
-				{
-					MessageItem item = new MessageItem();
-					item.setContent(result);
-					item.setUser(false);
-					messageHistoryList.add(item);
-					Log.e("SendFeed", "update contnet" + result);
-					messageHistoryAdapter.notifyDataSetChanged();
-				}
-				break;
-			default:
-				break;
 			}
 		}
 	};
 
-	private void backDialog()
-	{
+	private void backDialog() {
 		AlertDialog.Builder builder = new Builder(SendFeed.this);
 		builder.setTitle("��ʾ");
 		builder.setMessage("�Ƿ�ȡ��?");
-		builder.setPositiveButton("ȷ��", new DialogInterface.OnClickListener()
-		{
+		builder.setPositiveButton("ȷ��", new DialogInterface.OnClickListener() {
 
-			public void onClick(DialogInterface dialog, int which)
-			{
+			public void onClick(DialogInterface dialog, int which) {
 				dialog.dismiss();
 				finish();
 				overridePendingTransition(0, R.anim.roll_down);
 			}
 		});
-		builder.setNegativeButton("ȡ��", new DialogInterface.OnClickListener()
-		{
+		builder.setNegativeButton("ȡ��", new DialogInterface.OnClickListener() {
 
-			public void onClick(DialogInterface dialog, int which)
-			{
+			public void onClick(DialogInterface dialog, int which) {
 				dialog.cancel();
 			}
 		});
 		builder.create().show();
 	}
 
-	private void publishDialogShow()
-	{
-		if (mPublishDialog == null)
-		{
+	private void publishDialogShow() {
+		if (mPublishDialog == null) {
 			mPublishDialog = new ProgressDialog(SendFeed.this);
 			mPublishDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
 			mPublishDialog.setMessage("���ڷ���");
@@ -639,23 +578,17 @@ public class SendFeed extends Activity
 		mPublishDialog.show();
 	}
 
-	private void publishDialogDismiss()
-	{
-		if (mPublishDialog != null && mPublishDialog.isShowing())
-		{
+	private void publishDialogDismiss() {
+		if (mPublishDialog != null && mPublishDialog.isShowing()) {
 			mPublishDialog.dismiss();
 		}
 	}
 
-	public boolean onKeyDown(int keyCode, KeyEvent event)
-	{
-		if (keyCode == KeyEvent.KEYCODE_BACK)
-		{
-			if (mContent.getText().toString().trim().length() > 0)
-			{
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			if (mContent.getText().toString().trim().length() > 0) {
 				backDialog();
-			} else
-			{
+			} else {
 				finish();
 				overridePendingTransition(0, R.anim.roll_down);
 			}
