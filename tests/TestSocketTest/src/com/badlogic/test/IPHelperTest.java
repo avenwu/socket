@@ -1,6 +1,6 @@
 package com.badlogic.test;
 
-import com.badlogic.providers.IPHelper;
+import com.badlogic.utils.IPHelper;
 
 import junit.framework.TestCase;
 

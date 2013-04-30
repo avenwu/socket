@@ -1,4 +1,4 @@
-package com.badlogic.socket;
+package com.badlogic.socketchatter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
