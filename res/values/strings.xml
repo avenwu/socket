@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, ControlPCActivity!</string>
-    <string name="app_name">ControlPC</string>
-	<string name="content_empty">内容不能为空</string>
+    <string name="app_name">HelloChatter</string>
+    <string name="content_empty">Content can not be empty!</string>
+    <string name="enter">Start Chat</string>
+    <string name="scan">Scan IP</string>
+    <string name="click_to_scan">Click to scan all the available IP</string>
+    <string name="failed_to_get_ip">Failed to get IP</string>
+    <string name="available_ip">Available IP:\n</string>
+
 </resources>

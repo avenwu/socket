@@ -1,13 +1,9 @@
 package com.badlogic.model;
 
 public class EmoticonsResult {
-	/**
-	 * �������
-	 */
+
 	private String emotion;
-	/**
-	 * ����url��ַ
-	 */
+
 	private String icon;
 
 	public String getEmotion() {

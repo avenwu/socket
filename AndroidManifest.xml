@@ -19,14 +19,16 @@
             android:name=".socketchatter.IPScannerActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="adjustUnspecified|adjustResize" >
+            android:theme="@style/RollActivityTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".socketchatter.SendFeed" >
+        <activity
+            android:name=".socketchatter.SendFeed"
+            android:windowSoftInputMode="adjustUnspecified|adjustResize" >
         </activity>
         <activity android:name=".socketchatter.mouseActivity" />
         <activity android:name=".socketchatter.ControlPCActivity" >

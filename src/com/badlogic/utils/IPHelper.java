@@ -6,23 +6,19 @@ import java.io.InputStreamReader;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionService;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import com.badlogic.constant.Cons;
-
 import android.content.Context;
-import android.util.Config;
-import android.util.Log;
+
+import com.badlogic.model.PingCallable;
 
 public class IPHelper {
 	public static InetAddress[] getAllNetWork() {
@@ -93,46 +89,7 @@ public class IPHelper {
 		return result;
 	}
 
-	public static ArrayList<String> pingIP(String ip) {
-		long startTime = System.currentTimeMillis();
-		ArrayList<String> onlineIps = new ArrayList<String>();
-		CompletionService<String> executorService = new ExecutorCompletionService<String>(
-				Executors.newFixedThreadPool(30));
-		int index = ip.lastIndexOf(".");
-		int start = 1;// Integer.parseInt(ip.substring(index + 1));
-		// if (!ip.contains(com.badlogic.constant.Config.LAN_NETWORK)) {
-		// return onlineIps;
-		// }
-		while (start < 255) {
-			PingCallable<String> callable = new PingCallable<String>(ip, index,
-					start) {
-				@Override
-				public String call() throws Exception {
-					return pingTask(ip, index, start);
-				}
-			};
-			executorService.submit(callable);
-			start++;
-		}
-		start = 1;// Integer.parseInt(ip.substring(index + 1));
-		try {
-			while (start < 254) {
-				Future<String> future = executorService.take();
-				Log.e("IPHelper", "start="+start);
-				if (future.get() != null) {
-					System.out.println("ad ip in list:" + future.get());
-					onlineIps.add(future.get());
-				}
-				start++;
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		long endTime = System.currentTimeMillis();
-		System.out.println("finished:" + endTime + ", time used="
-				+ (endTime - startTime));
-		return onlineIps;
-	}
+	
 
 	public static ArrayList<String> pingIP(InetAddress[] ips)
 			throws IOException, InterruptedException, ExecutionException {
@@ -175,18 +132,6 @@ public class IPHelper {
 		System.out.println("finished:" + endTime + ", time used="
 				+ (endTime - startTime));
 		return onlineIps;
-	}
-
-	public abstract static class PingCallable<V> implements Callable<V> {
-		protected String ip;
-		protected int index;
-		protected int start;
-
-		public PingCallable(String ip, int index, int start) {
-			this.ip = ip;
-			this.index = index;
-			this.start = start;
-		}
 	}
 
 	public static String pingTask(String ip, int index, int start)

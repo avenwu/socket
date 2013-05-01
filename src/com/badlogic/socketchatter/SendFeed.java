@@ -112,11 +112,11 @@ public class SendFeed extends Activity {
 						try {
 							mainService.startServer(PORT);
 						} catch (InterruptedException e) {
-							showToast("failed to listen for message");
+//							showToast("failed to listen for message");
 							e.printStackTrace();
 						}
 					} catch (IOException e) {
-						showToast("failed listen for message");
+//						showToast("failed listen for message");
 						e.printStackTrace();
 					}
 					

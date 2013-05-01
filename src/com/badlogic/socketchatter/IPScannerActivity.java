@@ -12,23 +12,30 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.badlogic.R;
 import com.badlogic.constant.Cons;
+import com.badlogic.task.ScanTask;
 import com.badlogic.utils.IPHelper;
-
+/**
+ * User Interface, to scan the IP or enter Chat Page
+ * 
+ * @author AvenWu
+ * @2013-5-1
+ */
 public class IPScannerActivity extends Activity {
 	private ImageView radaRotate;
-	private Button startScan;
-	private Button startConnect;
+	private ImageButton startScan;
+	private ImageButton startConnect;
 	private TextView tvIP;
 	private Animation animation;
 	private ArrayList<String> ipList;
 	private boolean isRotating;
+	private ScanTask scanTask;;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -42,21 +49,10 @@ public class IPScannerActivity extends Activity {
 
 	private void startScan() {
 		radaRotate.startAnimation(animation);
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					InetAddress localIP = IPHelper
-							.getIPWifi(IPScannerActivity.this);
-					ipList = IPHelper.pingIP(localIP.getHostAddress());
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					mHandler.obtainMessage(Cons.STOP_SCANNING).sendToTarget();
-				}
-			}
-		}).start();
-
+		if (scanTask != null) {
+			scanTask = new ScanTask(getApplicationContext(), mHandler);
+			scanTask.execute();
+		}
 	}
 
 	private void setListeners() {
@@ -74,48 +70,61 @@ public class IPScannerActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
+				scanTask.cancel(true);
+				radaRotate.clearAnimation();
 				Intent intent = new Intent(IPScannerActivity.this,
 						SendFeed.class);
 				intent.putExtra("ip_address", "192.168.43.1");
 				startActivity(intent);
-				finish();
+				overridePendingTransition(android.R.anim.slide_in_left,
+						android.R.anim.fade_out);
 			}
 		});
 	}
 
 	private void initRes() {
 		radaRotate = (ImageView) findViewById(R.id.iv_rada_scan);
-		startScan = (Button) findViewById(R.id.btn_start_scan);
-		startConnect = (Button) findViewById(R.id.btn_start_connect);
+		startScan = (ImageButton) findViewById(R.id.iv_scan_btn);
+		startConnect = (ImageButton) findViewById(R.id.iv_enter_btn);
 		tvIP = (TextView) findViewById(R.id.tv_ip_available);
 		animation = AnimationUtils.loadAnimation(this, R.anim.scaner_rotate);
 	}
 
-	private void getIPFailed() {
-		Toast.makeText(this, "Failed to get IP", Toast.LENGTH_SHORT).show();
+	private void showToast(int content) {
+		Toast.makeText(this, content, Toast.LENGTH_SHORT).show();
 	}
 
 	private Handler mHandler = new Handler() {
+		@SuppressWarnings("unchecked")
 		@Override
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
 			switch (msg.what) {
 				case Cons.STOP_SCANNING :
+					ipList = (ArrayList<String>) msg.obj;
 					radaRotate.clearAnimation();
 					if (ipList != null && ipList.size() > 0) {
-						tvIP.setText("Available IP:\n");
+						tvIP.setText(R.string.available_ip);
 						for (String ip : ipList) {
 							tvIP.append(ip + "\n");
 						}
 					} else {
-						getIPFailed();
+						showToast(R.string.failed_to_get_ip);
 					}
+					break;
+				case Cons.SCANNING_FAILED :
+					showToast(R.string.failed_to_get_ip);
 					break;
 				default :
 					break;
 			}
-
 		}
-
 	};
+	public void onBackPressed() {
+		super.onBackPressed();
+		if (scanTask != null) {
+			scanTask.cancel(true);
+		}
+		overridePendingTransition(0, R.anim.roll_down);
+	}
 }
