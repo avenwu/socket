@@ -70,8 +70,7 @@ public class IPScannerActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
-				scanTask.cancel(true);
-				radaRotate.clearAnimation();
+				clearScanTask();
 				Intent intent = new Intent(IPScannerActivity.this,
 						SendFeed.class);
 				intent.putExtra("ip_address", "192.168.43.1");
@@ -90,6 +89,13 @@ public class IPScannerActivity extends Activity {
 		animation = AnimationUtils.loadAnimation(this, R.anim.scaner_rotate);
 	}
 
+	public void clearScanTask() {
+		if (scanTask != null) {
+			scanTask.cancel(true);
+		}
+		radaRotate.clearAnimation();
+		isRotating = false;
+	}
 	private void showToast(int content) {
 		Toast.makeText(this, content, Toast.LENGTH_SHORT).show();
 	}

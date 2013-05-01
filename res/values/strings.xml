@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">HelloChatter</string>
+    <string name="app_name">Chatter</string>
     <string name="content_empty">Content can not be empty!</string>
     <string name="enter">Start Chat</string>
     <string name="scan">Scan IP</string>
