@@ -8,5 +8,8 @@
     <string name="click_to_scan">Click to scan all the available IP</string>
     <string name="failed_to_get_ip">Failed to get IP</string>
     <string name="available_ip">Available IP:\n</string>
+    <string name="local_ip">Local IP:</string>
+    <string name="connect_to">Connect to %s</string>
+    <string name="time_passed">Time Passed: </string>
 
 </resources>

@@ -41,8 +41,8 @@
         <Button
             android:id="@+id/btn_settting"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" 
-            android:background="@drawable/connecting_wifi"/>
+            android:layout_height="wrap_content"
+            android:background="@drawable/connecting_wifi" />
     </LinearLayout>
 
     <ListView
@@ -66,6 +66,8 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         android:orientation="horizontal" >
 
         <ImageView
