@@ -3,6 +3,7 @@ package com.badlogic.task;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
+import android.app.PendingIntent.CanceledException;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import com.badlogic.utils.IPHelper;
 public class ScanTask extends AsyncTask<Void, Void, ArrayList<String>> {
 	private Context context;
 	private Handler handler;
+	private PingTask ipTask;
 
 	public ScanTask(Context context, Handler handler) {
 		this.context = context;
@@ -29,7 +31,7 @@ public class ScanTask extends AsyncTask<Void, Void, ArrayList<String>> {
 	protected ArrayList<String> doInBackground(Void... arg0) {
 		InetAddress localIP = IPHelper.getIPWifi(context);
 		context = null;
-		PingTask ipTask = new PingTask();
+		ipTask = new PingTask();
 		return ipTask.pingIP(localIP.getHostAddress());
 	}
 	@Override
@@ -40,5 +42,17 @@ public class ScanTask extends AsyncTask<Void, Void, ArrayList<String>> {
 			return;
 		}
 		handler.obtainMessage(Cons.SCANNING_FAILED).sendToTarget();
+	}
+	/**
+	 * try to cancell all the inner worker thread, too.
+	 * 
+	 * @param mayInteruptIfRunning
+	 */
+	public void cancelTask(boolean mayInteruptIfRunning) {
+		super.cancel(mayInteruptIfRunning);
+		if (ipTask != null) {
+			ipTask.cancelTask();
+		}
+		ipTask = null;
 	}
 }

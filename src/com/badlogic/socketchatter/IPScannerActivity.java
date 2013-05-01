@@ -78,11 +78,13 @@ public class IPScannerActivity extends Activity {
 		passedTime++;
 		tvTimePassed.setText(timeSub + passedTime + "s");
 	}
-
+	/**
+	 * start task to scan the IP in work thread;
+	 */
 	private void startScan() {
 		radaRotate.startAnimation(animation);
 		if (scanTask != null) {
-			scanTask.cancel(true);
+			scanTask.cancelTask(true);
 		}
 		scanTask = new ScanTask(getApplicationContext(), mHandler);
 		scanTask.execute();
@@ -132,10 +134,12 @@ public class IPScannerActivity extends Activity {
 		tvTimePassed.setText(getString(R.string.time_passed, "0"));
 		animation = AnimationUtils.loadAnimation(this, R.anim.scaner_rotate);
 	}
-
+	/**
+	 * cancel the scan task & time task
+	 */
 	public void clearTask() {
 		if (scanTask != null) {
-			scanTask.cancel(true);
+			scanTask.cancelTask(true);
 		}
 		radaRotate.clearAnimation();
 		isRotating = false;
@@ -145,7 +149,9 @@ public class IPScannerActivity extends Activity {
 		timer = null;
 		timerTask = null;
 	}
-
+	/**
+	 * reset the ip list & passed time to initial state;
+	 */
 	public void clearData() {
 		ipList = null;
 		passedTime = 0;
@@ -157,7 +163,9 @@ public class IPScannerActivity extends Activity {
 	private void showToast(int content) {
 		Toast.makeText(this, content, Toast.LENGTH_SHORT).show();
 	}
-
+	/**
+	 * deal with the message from ip-scan work thread;
+	 */
 	private Handler mHandler = new Handler() {
 		@SuppressWarnings("unchecked")
 		@Override
@@ -166,7 +174,6 @@ public class IPScannerActivity extends Activity {
 			switch (msg.what) {
 				case Cons.STOP_SCANNING :
 					isRotating = false;
-					timer.cancel();
 					ipList = (ArrayList<String>) msg.obj;
 					radaRotate.clearAnimation();
 					if (ipList != null && ipList.size() > 0) {
@@ -179,6 +186,7 @@ public class IPScannerActivity extends Activity {
 					} else {
 						showToast(R.string.failed_to_get_ip);
 					}
+					clearTask();
 					break;
 				case Cons.SCANNING_FAILED :
 					showToast(R.string.failed_to_get_ip);
