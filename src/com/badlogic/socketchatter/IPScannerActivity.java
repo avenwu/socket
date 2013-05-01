@@ -1,9 +1,7 @@
 package com.badlogic.socketchatter;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.concurrent.ExecutionException;
 
 import android.app.Activity;
 import android.content.Intent;

@@ -1,23 +1,21 @@
 package com.badlogic.socketchatter;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.os.StrictMode;
 import android.text.Editable;
@@ -44,7 +42,7 @@ import com.badlogic.adapter.MessageHistoryAdapter;
 import com.badlogic.constant.Cons;
 import com.badlogic.model.MessageItem;
 import com.badlogic.providers.DataProvider;
-import com.badlogic.utils.StringHelper;
+import com.badlogic.socketchatter.MainService.MessageListener;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
@@ -76,19 +74,67 @@ public class SendFeed extends Activity {
 	private ListView historyMessageListView;
 	private MessageHistoryAdapter messageHistoryAdapter;
 	private ArrayList<MessageItem> messageHistoryList;
-	private Socket clientRequestSocket;
-	private Socket serverResponseSocket;
-	private ServerSocket serverReceiver;
-	private BufferedReader serveReader;
-	private BufferedReader clientReader;
-	private PrintWriter serverWriter;
-	private PrintWriter clientWriter;
-	private boolean isServerConnected;
-	private boolean isConnecttingServer;
 	private String IP;
+	private MessageListener messageListener = new MessageListener() {
+		@Override
+		public void onReceive(String content) {
+			handler.obtainMessage(Cons.UPDATE_MSG_RECEIVED_CLIENT, content)
+					.sendToTarget();
+		}
+
+		@Override
+		public void onFailed() {
+
+		}
+
+		@Override
+		public void onComplete() {
+
+		}
+	};
+	private MainService mainService;
+	private ServiceConnection serviceConnection = new ServiceConnection() {
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mainService = null;
+		}
+
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mainService = ((MainService.ServiceBinder) service).getServices();
+			mainService.setMessageListener(messageListener);
+			showToast("start listen for message");
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						try {
+							mainService.startServer(PORT);
+						} catch (InterruptedException e) {
+							showToast("failed to listen for message");
+							e.printStackTrace();
+						}
+					} catch (IOException e) {
+						showToast("failed listen for message");
+						e.printStackTrace();
+					}
+					
+				}
+			}).start();
+			
+		}
+	};
+	private void showToast(String content) {
+		Toast.makeText(getApplicationContext(), content, Toast.LENGTH_SHORT)
+				.show();
+	}
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.newsfeedpublish);
+		bindService(new Intent(SendFeed.this, MainService.class),
+				serviceConnection, Context.BIND_AUTO_CREATE);
+
 		IP = getIntent().getStringExtra("ip_address");
 		StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
 				.detectDiskReads().detectDiskWrites().detectNetwork()
@@ -247,35 +293,35 @@ public class SendFeed extends Activity {
 		mVoice.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				try {
-					if (isServerConnected) {
-						Toast.makeText(SendFeed.this, "关闭Server服务",
-								Toast.LENGTH_SHORT).show();
-						shutDownServer();
-					} else {
-						Toast.makeText(SendFeed.this, "开启Server服务",
-								Toast.LENGTH_SHORT).show();
-						new Thread(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									try {
-										startServer();
-									} catch (InterruptedException e) {
-										e.printStackTrace();
-									}
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
+				// try {
+				// if (mainService.isServerConnected) {
+				// Toast.makeText(SendFeed.this, "关闭Server服务",
+				// Toast.LENGTH_SHORT).show();
+				// mainService.shutDownServer();
+				// } else {
+				Toast.makeText(SendFeed.this, "开启Server服务", Toast.LENGTH_SHORT)
+						.show();
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							try {
+								mainService.startServer(PORT);
+							} catch (InterruptedException e) {
+								e.printStackTrace();
 							}
-						}).start();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
-				} catch (IOException e) {
-					e.printStackTrace();
-					Toast.makeText(getApplicationContext(),
-							"Start Server failed...", Toast.LENGTH_SHORT)
-							.show();
-				}
+				}).start();
+				// }
+				// } catch (IOException e) {
+				// e.printStackTrace();
+				// Toast.makeText(getApplicationContext(),
+				// "Start Server failed...", Toast.LENGTH_SHORT)
+				// .show();
+				// }
 			}
 		});
 		/*
@@ -297,17 +343,16 @@ public class SendFeed extends Activity {
 			@Override
 			public void onClick(View v) {
 				try {
-					if (isConnecttingServer)
-						shutDownConnect();
+					if (mainService.isConnecttingServer)
+						mainService.shutDownConnect();
 					else
 						new Thread(new Runnable() {
 							@Override
 							public void run() {
 								try {
 									try {
-										connectServer();
+										mainService.connectServer(IP, PORT);
 									} catch (InterruptedException e) {
-										// TODO Auto-generated catch block
 										e.printStackTrace();
 									}
 								} catch (IOException e) {
@@ -384,69 +429,6 @@ public class SendFeed extends Activity {
 		});
 	}
 
-	protected void connectServer() throws IOException, InterruptedException {
-		isConnecttingServer = true;
-		// InetAddress address = InetAddress.getLocalHost();
-		// String IP = address.getHostAddress();
-		Log.e("SendFeed", "IP:" + IP);
-		clientRequestSocket = new Socket(IP, PORT);
-		clientReader = new BufferedReader(new InputStreamReader(
-				clientRequestSocket.getInputStream()));
-		clientWriter = new PrintWriter(new OutputStreamWriter(
-				clientRequestSocket.getOutputStream()), true);
-		// clientWriter.print("request connect\n");
-		Log.e("SendFeed", "requset connect to server");
-		// clientWriter.flush();
-		while (isConnecttingServer) {
-			String content = clientReader.readLine();
-			Log.e("SendFeed", "Received content from server:%s" + content);
-			Thread.sleep(1000);
-		}
-	}
-
-	protected void shutDownConnect() throws IOException {
-		if (clientReader != null)
-			clientReader.close();
-		if (clientWriter != null)
-			clientWriter.close();
-		if (clientRequestSocket != null)
-			clientRequestSocket.close();
-		isConnecttingServer = false;
-	}
-
-	private void startServer() throws IOException, InterruptedException {
-		serverReceiver = new ServerSocket(PORT);
-		isServerConnected = true;
-		serverResponseSocket = serverReceiver.accept();
-		serveReader = new BufferedReader(new InputStreamReader(
-				serverResponseSocket.getInputStream()));
-		serverWriter = new PrintWriter(new OutputStreamWriter(
-				serverResponseSocket.getOutputStream()));
-		Log.e("SendFeed", "get server reader");
-		StringBuffer line = new StringBuffer();
-		char[] buffer = new char[1024];
-		int length = 0;
-		while (isServerConnected) {
-			while ((length = serveReader.read(buffer, 0, buffer.length)) != -1) {
-				Log.e("SendFeed", "receive conetent from client:"
-						+ new String(buffer));
-				handler.obtainMessage(Cons.UPDATE_MSG_RECEIVED_CLIENT,
-						StringHelper.undecodeContent(new String(buffer)))
-						.sendToTarget();
-			}
-			Thread.sleep(100);
-		}
-		Log.e("SendFeed", "server end:");
-	}
-
-	private void shutDownServer() throws IOException {
-		if (serveReader != null)
-			serveReader.close();
-		if (serverResponseSocket != null)
-			serverResponseSocket.close();
-		isServerConnected = false;
-	}
-
 	private void sendSmileIcon(int position) {
 		MessageItem item = new MessageItem();
 		item.setSmileIconName(position);
@@ -465,10 +447,6 @@ public class SendFeed extends Activity {
 		mOption.setCoorType("bd09ll");
 		mOption.setAddrType("all");
 		mOption.setScanSpan(100);
-		// mOption.disableCache(true);
-		// mOption.setPoiNumber(20);
-		// mOption.setPoiDistance(1000);
-		// mOption.setPoiExtraInfo(true);
 		mClient = new LocationClient(getApplicationContext(), mOption);
 	}
 
@@ -478,10 +456,7 @@ public class SendFeed extends Activity {
 		item.setUser(true);
 		messageHistoryList.add(item);
 		notifyChange();
-		Log.e("SendFeed", "send content" + status);
-		clientWriter.write(StringHelper.decodeContent(status));
-		clientWriter.flush();
-		Log.e("SendFeed", "flush content" + status);
+		mainService.onPost(status);
 	}
 
 	Handler handler = new Handler() {
@@ -539,7 +514,7 @@ public class SendFeed extends Activity {
 						item.setUser(false);
 						messageHistoryList.add(item);
 						Log.e("SendFeed", "update contnet" + result);
-						messageHistoryAdapter.notifyDataSetChanged();
+						notifyChange();
 					}
 					break;
 				default :
@@ -595,6 +570,11 @@ public class SendFeed extends Activity {
 			return true;
 		}
 		return super.onKeyDown(keyCode, event);
+	}
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		unbindService(serviceConnection);
 	}
 
 }
