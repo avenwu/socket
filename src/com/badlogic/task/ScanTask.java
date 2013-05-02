@@ -32,6 +32,9 @@ public class ScanTask extends AsyncTask<Void, Void, ArrayList<String>> {
 		InetAddress localIP = IPHelper.getIPWifi(context);
 		context = null;
 		ipTask = new PingTask();
+		if (localIP == null) {
+			return null;
+		}
 		return ipTask.pingIP(localIP.getHostAddress());
 	}
 	@Override

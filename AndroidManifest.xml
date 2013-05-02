@@ -16,7 +16,7 @@
         android:icon="@drawable/icon_logo"
         android:label="@string/app_name" >
         <activity
-            android:name=".socketchatter.IPScannerActivity"
+            android:name=".socketchatter.ScannerActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait"
             android:theme="@style/RollActivityTheme" >
@@ -27,14 +27,14 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".socketchatter.SendFeed"
+            android:name=".socketchatter.ChetterActivity"
             android:windowSoftInputMode="adjustUnspecified|adjustResize" >
         </activity>
         <activity android:name=".socketchatter.mouseActivity" />
         <activity android:name=".socketchatter.ControlPCActivity" >
         </activity>
 
-        <service android:name=".socketchatter.MainService" >
+        <service android:name=".socketchatter.ChatterService" >
         </service>
     </application>
 

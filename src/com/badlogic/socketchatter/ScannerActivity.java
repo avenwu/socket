@@ -10,10 +10,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -33,7 +36,7 @@ import com.badlogic.utils.IPHelper;
  * @author AvenWu
  * @2013-5-1
  */
-public class IPScannerActivity extends Activity {
+public class ScannerActivity extends Activity {
 	private ImageView radaRotate;
 	private ImageButton startScan;
 	private ImageButton startConnect;
@@ -43,12 +46,15 @@ public class IPScannerActivity extends Activity {
 	private TextView tvTimePassed;
 	private Animation animation;
 	private ArrayList<String> ipList;
+	private ArrayAdapter<String> ipAdapter;
 	private boolean isRotating;
 	private ScanTask scanTask;;
 	private long passedTime = 0;
 	private String timeSub;
 	private Timer timer;
 	private TimerTask timerTask;
+	private String ip = "";
+
 	/**
 	 * update used time for scan IP;
 	 */
@@ -68,8 +74,14 @@ public class IPScannerActivity extends Activity {
 		initRes();
 		setListeners();
 		InetAddress ipString = IPHelper.getIPWifi(this);
-		String ip = getString(R.string.local_ip) + ipString.getHostAddress();
-		tvLoaclIP.setText(ip);
+		if (ipString == null) {
+			showToast(R.string.wifi_off);
+		} else {
+			String ip = getString(R.string.local_ip)
+					+ ipString.getHostAddress();
+			tvLoaclIP.setText(ip);
+		}
+
 	}
 	/**
 	 * increase the time escaped every 1 second;
@@ -91,6 +103,9 @@ public class IPScannerActivity extends Activity {
 	}
 
 	private void setListeners() {
+		/**
+		 * start to scan the IP or stop currently task for scanning;
+		 */
 		startScan.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -99,30 +114,55 @@ public class IPScannerActivity extends Activity {
 					clearData();
 					isRotating = false;
 				} else {
+					resetData();
 					increaseTime();
 					isRotating = true;
 					startScan();
 				}
-				startScan.setBackgroundResource(isRotating
-						? R.drawable.stop_scan_btn_bg
-						: R.drawable.scan_btn_bg);
+				resetScanBtn();
 			}
 		});
+		/**
+		 * enter the chat page with selected/default IP
+		 */
 		startConnect.setOnClickListener(new OnClickListener() {
-
 			@Override
 			public void onClick(View v) {
 				clearTask();
-				Intent intent = new Intent(IPScannerActivity.this,
-						SendFeed.class);
-				intent.putExtra("ip_address", "192.168.43.1");
+				Intent intent = new Intent(ScannerActivity.this,
+						ChetterActivity.class);
+				intent.putExtra("ip_address", ip);
 				startActivity(intent);
 				overridePendingTransition(android.R.anim.slide_in_left,
 						android.R.anim.fade_out);
 			}
 		});
-	}
 
+		ipListView.setOnItemClickListener(new OnItemClickListener() {
+			@Override
+			public void onItemClick(AdapterView<?> adapterView, View v,
+					int position, long id) {
+				Log.d("ScannerActivity", "item clicked, posiyion=" + position);
+				ip = ipList.get(position);
+				String text = editViewIp.getText().toString();
+				int index = text.lastIndexOf(Config.IP_SEPARATE) + 1;
+				editViewIp.setText(text.replace(text.substring(index), ip));
+			}
+		});
+	}
+	protected void resetData() {
+		if (ipList != null && ipAdapter != null) {
+			ipList.clear();
+			ipAdapter.notifyDataSetChanged();
+			editViewIp.setText("");
+		}
+		passedTime = 0;
+	}
+	public void resetScanBtn() {
+		startScan.setBackgroundResource(isRotating
+				? R.drawable.stop_scan_btn_bg
+				: R.drawable.scan_btn_bg);
+	}
 	private void initRes() {
 		radaRotate = (ImageView) findViewById(R.id.iv_rada_scan);
 		startScan = (ImageButton) findViewById(R.id.iv_scan_btn);
@@ -153,7 +193,10 @@ public class IPScannerActivity extends Activity {
 	 * reset the ip list & passed time to initial state;
 	 */
 	public void clearData() {
+		ipList.clear();
+		ipAdapter.notifyDataSetChanged();
 		ipList = null;
+		ipAdapter = null;
 		passedTime = 0;
 		editViewIp.setText("");
 		tvTimePassed.setText("");
@@ -176,13 +219,14 @@ public class IPScannerActivity extends Activity {
 					isRotating = false;
 					ipList = (ArrayList<String>) msg.obj;
 					radaRotate.clearAnimation();
+					resetScanBtn();
 					if (ipList != null && ipList.size() > 0) {
-						ArrayAdapter<String> adapter = new ArrayAdapter<String>(
+						ipAdapter = new ArrayAdapter<String>(
 								getApplicationContext(), R.layout.ip_item,
 								R.id.tv_ip, ipList);
-						ipListView.setAdapter(adapter);
-						editViewIp.setText(getString(R.string.connect_to,
-								ipList.get(0)));
+						ipListView.setAdapter(ipAdapter);
+						ip = ipList.get(0);
+						editViewIp.setText(getString(R.string.connect_to, ip));
 					} else {
 						showToast(R.string.failed_to_get_ip);
 					}
@@ -198,6 +242,7 @@ public class IPScannerActivity extends Activity {
 	};
 
 	public void increaseTime() {
+		passedTime = 0;
 		timeSub = getString(R.string.time_passed);
 		tvTimePassed.setVisibility(View.VISIBLE);
 		tvTimePassed.setText(timeSub + passedTime + "s");

@@ -16,7 +16,7 @@ import android.util.Log;
 
 import com.badlogic.utils.StringHelper;
 
-public class MainService extends Service {
+public class ChatterService extends Service {
 	private MessageListener messageListener;
 	private Socket clientRequestSocket;
 	private Socket serverResponseSocket;
@@ -60,8 +60,8 @@ public class MainService extends Service {
 	}
 
 	public class ServiceBinder extends Binder {
-		public MainService getServices() {
-			return MainService.this;
+		public ChatterService getServices() {
+			return ChatterService.this;
 		}
 	}
 	protected void onPost(String content) {

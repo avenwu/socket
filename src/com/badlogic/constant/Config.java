@@ -11,4 +11,7 @@ public class Config {
 	public static final String PING_SUCCESS = "TTL";
 	public static final int DELAY_TIME = 0;
 	public static final int INTERAL_TIME = 1000;
+	public static final int SLEEP_TIME = 200;
+	public static final int REPEAT_COUNT = 5;
+	public static final String IP_SEPARATE = " ";
 }

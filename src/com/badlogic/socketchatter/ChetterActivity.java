@@ -3,13 +3,11 @@ package com.badlogic.socketchatter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.AlertDialog.Builder;
 import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Drawable;
@@ -21,7 +19,6 @@ import android.os.StrictMode;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.InputMethodManager;
@@ -42,13 +39,11 @@ import com.badlogic.adapter.MessageHistoryAdapter;
 import com.badlogic.constant.Cons;
 import com.badlogic.model.MessageItem;
 import com.badlogic.providers.DataProvider;
-import com.badlogic.socketchatter.MainService.MessageListener;
-import com.baidu.location.BDLocation;
-import com.baidu.location.BDLocationListener;
+import com.badlogic.socketchatter.ChatterService.MessageListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 
-public class SendFeed extends Activity {
+public class ChetterActivity extends Activity {
 	private static int PORT = 3000;
 	private ImageView mBack;
 	private ImageView mPublish;
@@ -65,8 +60,6 @@ public class SendFeed extends Activity {
 	private LocationClient mClient;
 	private LocationClientOption mOption;
 
-	private boolean mLBSIsReceiver;
-	private String mLBSAddress;
 	private Drawable mPoi_off_icon;
 	private Drawable mPoi_on_icon;
 	private Button setting;
@@ -92,37 +85,39 @@ public class SendFeed extends Activity {
 
 		}
 	};
-	private MainService mainService;
+	private ChatterService chatterService;
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-			mainService = null;
+			chatterService = null;
 		}
 
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
-			mainService = ((MainService.ServiceBinder) service).getServices();
-			mainService.setMessageListener(messageListener);
+			chatterService = ((ChatterService.ServiceBinder) service)
+					.getServices();
+			chatterService.setMessageListener(messageListener);
 			showToast("start listen for message");
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
 						try {
-							mainService.startServer(PORT);
+							chatterService.startServer(PORT);
 						} catch (InterruptedException e) {
-//							showToast("failed to listen for message");
+							handler.obtainMessage(Cons.START_SERVICE_FAILED)
+									.sendToTarget();
 							e.printStackTrace();
 						}
 					} catch (IOException e) {
-//						showToast("failed listen for message");
+						handler.obtainMessage(Cons.START_SERVICE_FAILED)
+								.sendToTarget();
 						e.printStackTrace();
 					}
-					
 				}
 			}).start();
-			
+
 		}
 	};
 	private void showToast(String content) {
@@ -132,7 +127,7 @@ public class SendFeed extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.newsfeedpublish);
-		bindService(new Intent(SendFeed.this, MainService.class),
+		bindService(new Intent(ChetterActivity.this, ChatterService.class),
 				serviceConnection, Context.BIND_AUTO_CREATE);
 
 		IP = getIntent().getStringExtra("ip_address");
@@ -167,7 +162,6 @@ public class SendFeed extends Activity {
 				this.getApplicationContext(), messageHistoryList);
 		historyMessageListView.setAdapter(messageHistoryAdapter);
 		mClient.start();
-		mLBSIsReceiver = true;
 		mClient.requestLocation();
 	}
 
@@ -175,10 +169,6 @@ public class SendFeed extends Activity {
 		mBack = (ImageView) findViewById(R.id.newsfeedpublish_back);
 		mPublish = (ImageView) findViewById(R.id.newsfeedpublish_publish);
 		mContent = (EditText) findViewById(R.id.newsfeedpublish_content);
-		// mPlace = (Button) findViewById(R.id.newsfeedpublish_poi_place);
-		// mSperator = (ImageView)
-		// findViewById(R.id.newsfeedpublish_poi_sperator);
-		// mList = (ImageView) findViewById(R.id.newsfeedpublish_poi_list);
 		mCount = (TextView) findViewById(R.id.newsfeedpublish_count);
 		mVoice = (ImageButton) findViewById(R.id.newsfeedpublish_voice);
 		mPoi = (ImageButton) findViewById(R.id.newsfeedpublish_poi);
@@ -196,31 +186,21 @@ public class SendFeed extends Activity {
 	 */
 	private ArrayList<MessageItem> getData() {
 		ArrayList<MessageItem> data = new ArrayList<MessageItem>();
-		// for (int i = 0; i < 20; i++) {
-		// data.add("How are you? " + i);
-		// }
-
 		return data;
 	}
 
 	private void setListeners() {
 		mBack.setOnClickListener(new OnClickListener() {
-
 			public void onClick(View v) {
-				if (mContent.getText().toString().trim().length() > 0) {
-					backDialog();
-				} else {
-					finish();
-					overridePendingTransition(0, R.anim.roll_down);
-				}
+				onBackPressed();
 			}
 		});
 		mPublish.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
 				if (mContent.getText().toString().trim().length() == 0) {
-					Toast.makeText(SendFeed.this, R.string.content_empty,
-							Toast.LENGTH_SHORT).show();
+					Toast.makeText(ChetterActivity.this,
+							R.string.content_empty, Toast.LENGTH_SHORT).show();
 				} else {
 					try {
 						publishNewsFeed(mContent.getText().toString().trim());
@@ -269,44 +249,18 @@ public class SendFeed extends Activity {
 				}
 			}
 		});
-		/*
-		 * mPlace.setOnClickListener(new OnClickListener() {
-		 * 
-		 * public void onClick(View v) { if
-		 * (mPlace.getText().toString().equals("��ӵص�")) { mLBSIsReceiver =
-		 * true; mPlace.setText("���ڶ�λ...");
-		 * mSperator.setVisibility(View.VISIBLE);
-		 * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button_on); if
-		 * (!mClient.isStarted()) { mClient.start(); }
-		 * mClient.requestLocation(); } else if
-		 * (mPlace.getText().toString().equals("���ڶ�λ...")) { if
-		 * (mClient.isStarted()) { mClient.stop(); mLBSIsReceiver = false;
-		 * mLBSAddress = null; mPlace.setCompoundDrawables(mPoi_off_icon, null,
-		 * null, null); mPlace.setText("��ӵص�");
-		 * mSperator.setVisibility(View.INVISIBLE);
-		 * mList.setVisibility(View.INVISIBLE);
-		 * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button); } }
-		 * else { // startActivity(new Intent(NewsFeedPublish.this, //
-		 * CurrentLocation.class)); // overridePendingTransition(R.anim.roll_up,
-		 * R.anim.roll); } } });
-		 */
+
 		mVoice.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				// try {
-				// if (mainService.isServerConnected) {
-				// Toast.makeText(SendFeed.this, "关闭Server服务",
-				// Toast.LENGTH_SHORT).show();
-				// mainService.shutDownServer();
-				// } else {
-				Toast.makeText(SendFeed.this, "开启Server服务", Toast.LENGTH_SHORT)
-						.show();
+				Toast.makeText(ChetterActivity.this, "开启Server服务",
+						Toast.LENGTH_SHORT).show();
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
 						try {
 							try {
-								mainService.startServer(PORT);
+								chatterService.startServer(PORT);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -315,43 +269,22 @@ public class SendFeed extends Activity {
 						}
 					}
 				}).start();
-				// }
-				// } catch (IOException e) {
-				// e.printStackTrace();
-				// Toast.makeText(getApplicationContext(),
-				// "Start Server failed...", Toast.LENGTH_SHORT)
-				// .show();
-				// }
 			}
 		});
-		/*
-		 * mPoi.setOnClickListener(new OnClickListener() {
-		 * 
-		 * public void onClick(View v) { if (mLBSIsReceiver) { mLBSIsReceiver =
-		 * false; mLBSAddress = null; mPlace.setCompoundDrawables(mPoi_off_icon,
-		 * null, null, null); mPlace.setText("��ӵص�");
-		 * mSperator.setVisibility(View.INVISIBLE);
-		 * mList.setVisibility(View.INVISIBLE);
-		 * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button); } else
-		 * { mLBSIsReceiver = true; mPlace.setText("���ڶ�λ...");
-		 * mSperator.setVisibility(View.VISIBLE);
-		 * mPoi.setImageResource(R.drawable.v5_0_1_publisher_poi_button_on); if
-		 * (!mClient.isStarted()) { mClient.start(); }
-		 * mClient.requestLocation(); } } });
-		 */
+
 		mPoi.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				try {
-					if (mainService.isConnecttingServer)
-						mainService.shutDownConnect();
+					if (chatterService.isConnecttingServer)
+						chatterService.shutDownConnect();
 					else
 						new Thread(new Runnable() {
 							@Override
 							public void run() {
 								try {
 									try {
-										mainService.connectServer(IP, PORT);
+										chatterService.connectServer(IP, PORT);
 									} catch (InterruptedException e) {
 										e.printStackTrace();
 									}
@@ -366,20 +299,6 @@ public class SendFeed extends Activity {
 			}
 		});
 
-		mImage.setOnClickListener(new OnClickListener() {
-
-			public void onClick(View v) {
-				Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���",
-						Toast.LENGTH_SHORT).show();
-			}
-		});
-		mAt.setOnClickListener(new OnClickListener() {
-
-			public void onClick(View v) {
-				Toast.makeText(SendFeed.this, "��ʱ�޷��ṩ�˹���",
-						Toast.LENGTH_SHORT).show();
-			}
-		});
 		mEmoticon.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
@@ -392,7 +311,7 @@ public class SendFeed extends Activity {
 					mEmoticon
 							.setImageResource(R.drawable.v5_0_1_publisher_pad_button);
 					((InputMethodManager) getSystemService(INPUT_METHOD_SERVICE))
-							.hideSoftInputFromWindow(SendFeed.this
+							.hideSoftInputFromWindow(ChetterActivity.this
 									.getCurrentFocus().getWindowToken(),
 									InputMethodManager.HIDE_NOT_ALWAYS);
 				}
@@ -407,20 +326,7 @@ public class SendFeed extends Activity {
 			}
 
 		});
-		mClient.registerLocationListener(new BDLocationListener() {
 
-			public void onReceivePoi(BDLocation arg0) {
-
-			}
-
-			public void onReceiveLocation(BDLocation arg0) {
-				// mLBSAddress = arg0.getAddrStr();
-				// mApplication.mLocation = arg0.getAddrStr();
-				// mApplication.mLatitude = arg0.getLatitude();
-				// mApplication.mLongitude = arg0.getLongitude();
-				// handler.sendEmptyMessage(2);
-			}
-		});
 		setting.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -456,56 +362,14 @@ public class SendFeed extends Activity {
 		item.setUser(true);
 		messageHistoryList.add(item);
 		notifyChange();
-		mainService.onPost(status);
+		chatterService.onPost(status);
 	}
 
+	@SuppressLint("HandlerLeak")
 	Handler handler = new Handler() {
-
 		public void handleMessage(Message msg) {
 			super.handleMessage(msg);
 			switch (msg.what) {
-				case 0 :
-					publishDialogShow();
-					break;
-				case 1 :
-					publishDialogDismiss();
-					switch (Integer.parseInt(msg.obj.toString())) {
-						case 1 :
-							mContent.setText("");
-							Toast.makeText(SendFeed.this, "�����ɹ�",
-									Toast.LENGTH_SHORT).show();
-							finish();
-							overridePendingTransition(0, R.anim.roll_down);
-							break;
-
-						case 10400 :
-							Toast.makeText(SendFeed.this, "״̬���¹���Ƶ��",
-									Toast.LENGTH_SHORT).show();
-							break;
-						case 10401 :
-							Toast.makeText(SendFeed.this, "״̬������޶�����",
-									Toast.LENGTH_SHORT).show();
-							break;
-
-						case 10402 :
-							Toast.makeText(SendFeed.this, "״̬�����ݺ��зǷ��ַ�",
-									Toast.LENGTH_SHORT).show();
-							break;
-					}
-					break;
-
-				case 2 :
-					// if (mClient.isStarted()) {
-					// mClient.stop();
-					// }
-					// if (mLBSAddress != null) {
-					// mPlace.setText(mLBSAddress);
-					// mPlace.setCompoundDrawables(mPoi_on_icon, null, null,
-					// null);
-					// mList.setVisibility(View.VISIBLE);
-					// mSperator.setVisibility(View.VISIBLE);
-					// }
-					break;
 				case Cons.UPDATE_MSG_RECEIVED_CLIENT :
 					String result = (String) msg.obj;
 					if (result != null) {
@@ -517,64 +381,22 @@ public class SendFeed extends Activity {
 						notifyChange();
 					}
 					break;
+				case Cons.START_SERVICE_FAILED :
+					showToast("failed to listen for message");
 				default :
 					break;
 			}
 		}
 	};
 
-	private void backDialog() {
-		AlertDialog.Builder builder = new Builder(SendFeed.this);
-		builder.setTitle("��ʾ");
-		builder.setMessage("�Ƿ�ȡ��?");
-		builder.setPositiveButton("ȷ��", new DialogInterface.OnClickListener() {
-
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.dismiss();
-				finish();
-				overridePendingTransition(0, R.anim.roll_down);
-			}
-		});
-		builder.setNegativeButton("ȡ��", new DialogInterface.OnClickListener() {
-
-			public void onClick(DialogInterface dialog, int which) {
-				dialog.cancel();
-			}
-		});
-		builder.create().show();
-	}
-
-	private void publishDialogShow() {
-		if (mPublishDialog == null) {
-			mPublishDialog = new ProgressDialog(SendFeed.this);
-			mPublishDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-			mPublishDialog.setMessage("���ڷ���");
-		}
-		mPublishDialog.show();
-	}
-
-	private void publishDialogDismiss() {
-		if (mPublishDialog != null && mPublishDialog.isShowing()) {
-			mPublishDialog.dismiss();
-		}
-	}
-
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			if (mContent.getText().toString().trim().length() > 0) {
-				backDialog();
-			} else {
-				finish();
-				overridePendingTransition(0, R.anim.roll_down);
-			}
-			return true;
-		}
-		return super.onKeyDown(keyCode, event);
-	}
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
 		unbindService(serviceConnection);
 	}
-
+	@Override
+	public void onBackPressed() {
+		super.onBackPressed();
+		overridePendingTransition(0, R.anim.roll_down);
+	}
 }

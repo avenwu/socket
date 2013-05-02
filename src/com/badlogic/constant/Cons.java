@@ -12,4 +12,5 @@ public class Cons {
 	public static final int STOP_SCANNING = 12;
 	public static final int SCANNING_FAILED = 13;
 	public static final int UPDATE_TIME = 14;
+	public static final int START_SERVICE_FAILED = 15;
 }

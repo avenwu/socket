@@ -11,5 +11,6 @@
     <string name="local_ip">Local IP:</string>
     <string name="connect_to">Connect to %s</string>
     <string name="time_passed">Time Passed: </string>
+    <string name="wifi_off">Wifi off line!</string>
 
 </resources>

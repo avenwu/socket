@@ -11,6 +11,7 @@ import java.util.concurrent.Future;
 
 import android.util.Log;
 
+import com.badlogic.constant.Config;
 import com.badlogic.model.PingCallable;
 
 public class PingTask {
@@ -44,9 +45,19 @@ public class PingTask {
 			return onlineIps;
 		}
 		start = 1;
+		int waittingCount = 0;
+		int sleepTime = 0;
 		try {
-			while (start < 254 && !isCancelled) {
-				Future<String> future = executorService.take();
+			while (start < futureList.size() && !isCancelled) {
+				Future<String> future = executorService.poll();
+				while (future == null && waittingCount < 5) {
+					sleepTime = Config.SLEEP_TIME * (2 << waittingCount);
+					Log.e("PingTask", "get future failed, sleep " + sleepTime);
+					Thread.sleep(sleepTime);
+					future = executorService.poll();
+					waittingCount++;
+				}
+				waittingCount = 0;
 				Log.e("IPHelper", "start=" + start);
 				if (future.get() != null) {
 					System.out.println("ad ip in list:" + future.get());
@@ -70,7 +81,8 @@ public class PingTask {
 		isCancelled = true;
 		if (futureList.size() > 0) {
 			for (Future<String> future : futureList) {
-				Log.d("PingTask", "ping task has been cancelled" + future.toString());
+				Log.d("PingTask",
+						"ping task has been cancelled" + future.toString());
 				future.cancel(true);
 			}
 		}
