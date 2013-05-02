@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import android.R.integer;
 import android.util.Log;
 
 import com.badlogic.constant.Config;
@@ -100,17 +101,23 @@ public class PingTask {
 				process.getInputStream()));
 		String result;
 		reader.readLine();// the first is useless
-		if ((result = reader.readLine()) == null
-				|| (!result.contains(com.badlogic.constant.Config.PING_SUCCESS) && !result
-						.contains(com.badlogic.constant.Config.PING_SUCCESS
-								.toLowerCase()))) {
-			reader.close();
-			process.destroy();
-			return null;
+		for (int counter = 0; counter < Config.PING_COUNTER; counter++) {
+			result = reader.readLine();
+			if (result != null
+					&& (result
+							.contains(com.badlogic.constant.Config.PING_SUCCESS) || result
+							.contains(com.badlogic.constant.Config.PING_SUCCESS
+									.toLowerCase()))) {
+				reader.close();
+				process.destroy();
+				System.out.println("find online ip:" + newIp);
+				return newIp;
+			}
+			counter++;
 		}
-		System.out.println("find online ip:" + newIp);
+		System.out.println("cannot connect to " + newIp);
 		reader.close();
 		process.destroy();
-		return newIp;
+		return null;
 	}
 }

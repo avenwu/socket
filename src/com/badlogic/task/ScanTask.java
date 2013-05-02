@@ -18,19 +18,16 @@ import com.badlogic.utils.IPHelper;
  * 
  */
 public class ScanTask extends AsyncTask<Void, Void, ArrayList<String>> {
-	private Context context;
 	private Handler handler;
 	private PingTask ipTask;
-
-	public ScanTask(Context context, Handler handler) {
-		this.context = context;
+	private InetAddress localIP;
+	public ScanTask(InetAddress localIP, Handler handler) {
+		this.localIP = localIP;
 		this.handler = handler;
 	}
 
 	@Override
 	protected ArrayList<String> doInBackground(Void... arg0) {
-		InetAddress localIP = IPHelper.getIPWifi(context);
-		context = null;
 		ipTask = new PingTask();
 		if (localIP == null) {
 			return null;

@@ -1,4 +1,6 @@
 package com.badlogic.constant;
+
+
 /**
  * configure string
  * 
@@ -12,6 +14,8 @@ public class Config {
 	public static final int DELAY_TIME = 0;
 	public static final int INTERAL_TIME = 1000;
 	public static final int SLEEP_TIME = 200;
-	public static final int REPEAT_COUNT = 5;
+	public static final int REPEAT_COUNT = 10;
 	public static final String IP_SEPARATE = " ";
+	public static int PORT = 30001;
+	public static int PING_COUNTER = 5;
 }

@@ -26,6 +26,10 @@
         <item name="android:layout_height">wrap_content</item>
     </style>
 
+    <style name="bottom_grid_style" parent="@style/base_layout">
+        <item name="android:layout_centerHorizontal">true</item>
+    </style>
+
     <style name="chat_text_content" parent="@style/base_layout">
         <item name="android:textColor">@color/black</item>
         <item name="android:layout_gravity">center_vertical</item>

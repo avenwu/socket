@@ -64,16 +64,24 @@ public class ChatterService extends Service {
 			return ChatterService.this;
 		}
 	}
-	protected void onPost(String content) {
+	protected boolean onPost(String content) {
+
 		Log.e("SendFeed", "send content" + content);
 		if (isClient) {
+			if (clientWriter == null) {
+				return false;
+			}
 			clientWriter.write(StringHelper.decodeContent(content));
 			clientWriter.flush();
 		} else {
+			if (serverWriter == null) {
+				return false;
+			}
 			serverWriter.write(StringHelper.decodeContent(content));
 			serverWriter.flush();
 		}
 		Log.e("SendFeed", "flush content" + content);
+		return true;
 	}
 
 	protected void connectServer(String IP, int port) throws IOException,

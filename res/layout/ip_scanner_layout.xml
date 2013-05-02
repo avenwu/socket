@@ -78,17 +78,21 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/rl_bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/main_bottom_bg" >
 
-        <RelativeLayout style="@style/base_layout" >
+        <RelativeLayout
+            android:id="@+id/rl_bottom_left"
+            style="@style/base_layout"
+            android:layout_width="match_parent"
+            android:layout_weight="1" >
 
             <ImageButton
                 android:id="@+id/iv_scan_btn"
-                style="@style/base_layout"
+                style="@style/bottom_grid_style"
                 android:background="@drawable/scan_btn_bg" />
 
             <TextView
@@ -100,22 +104,22 @@
         <ImageButton
             android:layout_width="2dp"
             android:layout_height="wrap_content"
-            android:layout_centerHorizontal="true"
             android:background="@drawable/scan_btm_gap_line" />
 
         <RelativeLayout
             style="@style/base_layout"
-            android:layout_alignParentRight="true" >
+            android:layout_width="match_parent"
+            android:layout_weight="1" >
 
             <ImageButton
                 android:id="@+id/iv_enter_btn"
-                style="@style/base_layout"
+                style="@style/bottom_grid_style"
                 android:background="@drawable/scan_btn_bg" />
 
             <TextView
                 style="@style/scan_text_style"
                 android:text="@string/enter" />
         </RelativeLayout>
-    </RelativeLayout>
+    </LinearLayout>
 
 </LinearLayout>

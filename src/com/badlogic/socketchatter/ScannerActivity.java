@@ -10,6 +10,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -98,7 +100,14 @@ public class ScannerActivity extends Activity {
 		if (scanTask != null) {
 			scanTask.cancelTask(true);
 		}
-		scanTask = new ScanTask(getApplicationContext(), mHandler);
+		InetAddress local = IPHelper.getIPWifi(getApplicationContext());
+		if (local == null) {
+			tvLoaclIP.setText(R.string.local_ip);
+		} else {
+			String ip = getString(R.string.local_ip) + local.getHostAddress();
+			tvLoaclIP.setText(ip);
+		}
+		scanTask = new ScanTask(local, mHandler);
 		scanTask.execute();
 	}
 
@@ -129,6 +138,11 @@ public class ScannerActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				clearTask();
+				if (!editViewIp.getText().toString().isEmpty()) {
+					String text = editViewIp.getText().toString();
+					int index = text.lastIndexOf(Config.IP_SEPARATE) + 1;
+					ip = text.substring(index).trim();
+				}
 				Intent intent = new Intent(ScannerActivity.this,
 						ChetterActivity.class);
 				intent.putExtra("ip_address", ip);
@@ -193,8 +207,10 @@ public class ScannerActivity extends Activity {
 	 * reset the ip list & passed time to initial state;
 	 */
 	public void clearData() {
-		ipList.clear();
-		ipAdapter.notifyDataSetChanged();
+		if (ipList != null) {
+			ipList.clear();
+			ipAdapter.notifyDataSetChanged();
+		}
 		ipList = null;
 		ipAdapter = null;
 		passedTime = 0;
@@ -234,6 +250,8 @@ public class ScannerActivity extends Activity {
 					break;
 				case Cons.SCANNING_FAILED :
 					showToast(R.string.failed_to_get_ip);
+					clearTask();
+					resetScanBtn();
 					break;
 				default :
 					break;

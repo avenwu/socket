@@ -1,6 +1,7 @@
 package com.badlogic.socketchatter;
 
 import java.io.IOException;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 
 import android.annotation.SuppressLint;
@@ -36,6 +37,7 @@ import android.widget.Toast;
 import com.badlogic.R;
 import com.badlogic.adapter.EmotionStaticAdapter;
 import com.badlogic.adapter.MessageHistoryAdapter;
+import com.badlogic.constant.Config;
 import com.badlogic.constant.Cons;
 import com.badlogic.model.MessageItem;
 import com.badlogic.providers.DataProvider;
@@ -44,7 +46,6 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 
 public class ChetterActivity extends Activity {
-	private static int PORT = 3000;
 	private ImageView mBack;
 	private ImageView mPublish;
 	private EditText mContent;
@@ -68,6 +69,7 @@ public class ChetterActivity extends Activity {
 	private MessageHistoryAdapter messageHistoryAdapter;
 	private ArrayList<MessageItem> messageHistoryList;
 	private String IP;
+
 	private MessageListener messageListener = new MessageListener() {
 		@Override
 		public void onReceive(String content) {
@@ -98,29 +100,35 @@ public class ChetterActivity extends Activity {
 			chatterService = ((ChatterService.ServiceBinder) service)
 					.getServices();
 			chatterService.setMessageListener(messageListener);
-			showToast("start listen for message");
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						try {
-							chatterService.startServer(PORT);
-						} catch (InterruptedException e) {
-							handler.obtainMessage(Cons.START_SERVICE_FAILED)
-									.sendToTarget();
-							e.printStackTrace();
-						}
-					} catch (IOException e) {
+						chatterService.startServer(Config.PORT);
+					} catch (Exception e) {
 						handler.obtainMessage(Cons.START_SERVICE_FAILED)
 								.sendToTarget();
 						e.printStackTrace();
 					}
 				}
 			}).start();
-
+			if (!IP.isEmpty()) {
+				if (!chatterService.isConnecttingServer) {
+					new Thread(new Runnable() {
+						public void run() {
+							try {
+								chatterService.connectServer(IP, Config.PORT);
+							} catch (Exception e) {
+								e.printStackTrace();
+								chatterService.isConnecttingServer = false;
+							}
+						}
+					}).start();
+				}
+			}
 		}
 	};
-	private void showToast(String content) {
+	private void showToast(int content) {
 		Toast.makeText(getApplicationContext(), content, Toast.LENGTH_SHORT)
 				.show();
 	}
@@ -178,7 +186,6 @@ public class ChetterActivity extends Activity {
 		mEmoticons = (GridView) findViewById(R.id.newsfeedpublish_emoticons);
 		historyMessageListView = (ListView) findViewById(R.id.listview_message);
 		setting = (Button) findViewById(R.id.btn_settting);
-
 	}
 
 	/*
@@ -196,7 +203,6 @@ public class ChetterActivity extends Activity {
 			}
 		});
 		mPublish.setOnClickListener(new OnClickListener() {
-
 			public void onClick(View v) {
 				if (mContent.getText().toString().trim().length() == 0) {
 					Toast.makeText(ChetterActivity.this,
@@ -260,7 +266,7 @@ public class ChetterActivity extends Activity {
 					public void run() {
 						try {
 							try {
-								chatterService.startServer(PORT);
+								chatterService.startServer(Config.PORT);
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							}
@@ -284,7 +290,8 @@ public class ChetterActivity extends Activity {
 							public void run() {
 								try {
 									try {
-										chatterService.connectServer(IP, PORT);
+										chatterService.connectServer(IP,
+												Config.PORT);
 									} catch (InterruptedException e) {
 										e.printStackTrace();
 									}
@@ -362,7 +369,9 @@ public class ChetterActivity extends Activity {
 		item.setUser(true);
 		messageHistoryList.add(item);
 		notifyChange();
-		chatterService.onPost(status);
+		if (!chatterService.onPost(status)) {
+			handler.obtainMessage(Cons.SENND_MESSAGE_FAILED).sendToTarget();
+		}
 	}
 
 	@SuppressLint("HandlerLeak")
@@ -382,7 +391,11 @@ public class ChetterActivity extends Activity {
 					}
 					break;
 				case Cons.START_SERVICE_FAILED :
-					showToast("failed to listen for message");
+					showToast(R.string.failed_to_listen);
+					break;
+				case Cons.SENND_MESSAGE_FAILED :
+					showToast(R.string.failed_to_send_message);
+					break;
 				default :
 					break;
 			}
